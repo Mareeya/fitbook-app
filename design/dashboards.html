@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fitbook — Dashboards (Member · Staff · Admin)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  :root {
+    --paper: #f2f1ea;
+    --card: #ffffff;
+    --ink: #0d0d0d;
+    --ink-dim: #0d0d0d99;
+    --ink-faint: #0d0d0d5c;
+    --line: #dedcd2;
+    --track: #e7e5db;
+    --signal: #2e7dff;
+    --signal-wash: #2e7dff0f;
+    --warn: #f2a93b;
+
+    --font-data: "IBM Plex Mono", ui-monospace, monospace;
+    --font-ui: Inter, "Helvetica Neue", ui-sans-serif, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 52px 40px 90px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-ui);
+  }
+
+  /* ---------- Type roles ---------- */
+
+  .type-class  { font-family: var(--font-ui); font-size: 1.625rem; font-weight: 700; line-height: 1.12; letter-spacing: -0.025em; }
+  .type-num    { font-family: var(--font-data); font-size: 4.25rem; font-weight: 600; line-height: 0.92; font-variant-numeric: tabular-nums slashed-zero; letter-spacing: -0.02em; }
+  .type-label  { font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 600; line-height: 1.2; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
+  .type-body   { font-family: var(--font-ui); font-size: 0.9375rem; font-weight: 400; line-height: 1.45; color: var(--ink-dim); }
+  .type-ui     { font-family: var(--font-ui); font-size: 0.875rem; font-weight: 500; line-height: 1.3; letter-spacing: 0.02em; }
+  .type-action { font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1; }
+
+  /* ---------- Board chrome ---------- */
+
+  .board-head { max-width: 1240px; margin: 0 auto 44px; }
+  .board-head h1 { margin: 10px 0 0; font-size: 2.5rem; font-weight: 800; letter-spacing: -0.035em; }
+  .board-head p.type-body { margin: 14px 0 0; max-width: 46rem; }
+
+  .board { max-width: 1240px; margin: 0 auto; display: grid; gap: 52px; }
+
+  .frame-wrap { display: grid; gap: 12px; }
+  .frame-name { display: flex; align-items: baseline; justify-content: space-between; margin: 0; }
+  .frame-name span:last-child { color: var(--ink-faint); }
+
+  .frame { background: var(--card); border: 1px solid var(--line); overflow: hidden; }
+
+  .top {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 22px 30px; border-bottom: 1px solid var(--line);
+  }
+  .who { font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.015em; margin: 8px 0 0; }
+
+  .sec-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 20px 30px 14px; border-bottom: 1px solid var(--line);
+  }
+
+  /* ---------- The one blue block per screen ---------- */
+
+  .hero {
+    background: var(--signal); color: #fff;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center; gap: 32px; padding: 28px 30px;
+  }
+  .hero .type-label { color: #ffffffb8; }
+  .hero-name { font-size: 2.125rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; margin: 12px 0 0; }
+  .hero-sub { margin: 10px 0 0; font-size: 0.875rem; color: #ffffffcc; }
+  .hero-right { display: flex; align-items: center; gap: 30px; }
+  .hero-count { text-align: right; }
+  .hero-count .big { font-family: var(--font-data); font-size: 3.25rem; font-weight: 600; line-height: 0.9; letter-spacing: -0.03em; margin: 8px 0 0; font-variant-numeric: tabular-nums slashed-zero; }
+  .hero-btn {
+    background: #fff; color: var(--signal); border: 0; padding: 17px 24px; cursor: default;
+    font-family: var(--font-ui); font-size: 0.8125rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap;
+  }
+
+  /* ---------- Rows ---------- */
+
+  .rows { display: grid; }
+  .row {
+    display: grid; align-items: center; gap: 24px;
+    padding: 18px 30px 18px 27px;
+    border-bottom: 1px solid var(--line);
+    border-left: 3px solid transparent;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row.is-live { border-left-color: var(--signal); background: var(--signal-wash); }
+  .row.is-live .row-time { color: var(--signal); }
+  .row.is-done { opacity: 0.34; }
+
+  .row-member { grid-template-columns: 150px minmax(0, 1fr) 150px 120px; }
+  .row-staff  { grid-template-columns: 108px minmax(0, 1fr) 190px 128px 92px; }
+  .row-admin  { grid-template-columns: 210px minmax(0, 1fr) 96px; }
+  .row-roster { grid-template-columns: 44px minmax(0, 1fr) 190px; padding-block: 14px; }
+
+  .row-time  { font-family: var(--font-data); font-size: 2rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums slashed-zero; }
+  .row-when  { font-family: var(--font-data); font-size: 0.9375rem; font-weight: 500; font-variant-numeric: tabular-nums slashed-zero; }
+  .row-when em { font-style: normal; display: block; margin-top: 4px; font-size: 0.6875rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); font-family: var(--font-ui); font-weight: 600; }
+  .row-name  { font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.015em; }
+  .row-coach { margin-top: 4px; font-size: 0.8125rem; color: var(--ink-faint); }
+  .row-link  { justify-self: end; color: var(--ink-dim); }
+  .row-idx   { font-family: var(--font-data); font-size: 0.8125rem; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Occupancy bars ---------- */
+
+  .bar { display: grid; gap: 7px; }
+  .bar-track { height: 8px; background: var(--track); }
+  .bar-fill { height: 100%; background: var(--signal); }
+  .bar-fill.warn { background: var(--warn); }
+  .bar-fill.dim  { background: #0d0d0d40; }
+  .bar-cap { font-family: var(--font-data); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.06em; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  /* ---------- Chips ---------- */
+
+  .chip-state {
+    justify-self: end; padding: 7px 11px;
+    font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; line-height: 1; white-space: nowrap;
+  }
+  .chip-live  { background: var(--signal); color: #fff; }
+  .chip-warn  { background: var(--warn); color: #241a06; }
+  .chip-open  { border: 1px solid var(--line); color: var(--ink-dim); }
+  .chip-ended { color: var(--ink-faint); padding-inline: 0; }
+  .chip-off   { color: var(--ink-faint); border: 1px solid var(--line); }
+
+  .pair { display: flex; gap: 8px; justify-self: end; }
+  .toggle {
+    padding: 7px 10px; border: 1px solid var(--line); color: var(--ink-dim);
+    font-family: var(--font-ui); font-size: 0.6875rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; line-height: 1;
+  }
+  .toggle.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+
+  /* ---------- Stat strips ---------- */
+
+  .stats { display: grid; border-bottom: 1px solid var(--line); }
+  .stats.of-3 { grid-template-columns: repeat(3, 1fr); }
+  .stats.of-4 { grid-template-columns: repeat(4, 1fr); }
+  .stat { padding: 22px 30px; border-right: 1px solid var(--line); }
+  .stat:last-child { border-right: 0; }
+  .stat .fig { font-family: var(--font-data); font-size: 2.5rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; margin: 12px 0 0; font-variant-numeric: tabular-nums slashed-zero; }
+  .stat .note { margin: 9px 0 0; font-size: 0.75rem; color: var(--ink-faint); }
+  .stat.is-signal { background: var(--signal); color: #fff; }
+  .stat.is-signal .type-label,
+  .stat.is-signal .note { color: #ffffffb8; }
+
+  /* ---------- Open-spots cards (member) ---------- */
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .mini { padding: 22px 24px 24px; border-right: 1px solid var(--line); display: grid; gap: 16px; }
+  .mini:last-child { border-right: 0; }
+  .mini-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .mini-time { font-family: var(--font-data); font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums slashed-zero; }
+  .mini-name { font-size: 1rem; font-weight: 700; letter-spacing: -0.015em; margin: 4px 0 0; }
+  .mini-coach { font-size: 0.8125rem; color: var(--ink-faint); margin: 4px 0 0; }
+
+  .btn-line {
+    display: block; width: 100%; padding: 13px; border: 1px solid var(--line);
+    background: transparent; color: var(--ink); cursor: default; text-align: center;
+    font-family: var(--font-ui); font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .btn-line.is-off { color: var(--ink-faint); }
+
+  /* ---------- Notice band (staff blue block) ---------- */
+
+  .band {
+    background: var(--signal); color: #fff;
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center; gap: 28px; padding: 22px 30px;
+  }
+  .band .type-label { color: #ffffffb8; }
+  .band-title { margin: 10px 0 0; font-size: 1.375rem; font-weight: 800; letter-spacing: -0.02em; }
+  .band-sub { margin: 8px 0 0; font-size: 0.8125rem; color: #ffffffcc; }
+
+  /* ---------- Admin split ---------- */
+
+  .split-2 { display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
+  .split-2 > div:first-child { border-right: 1px solid var(--line); }
+  .panel-pad { padding: 22px 26px 26px; }
+  .top-class { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .top-class:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+  .top-class .name { font-size: 1rem; font-weight: 700; letter-spacing: -0.015em; }
+  .top-class .val { font-family: var(--font-data); font-size: 0.875rem; font-weight: 500; color: var(--ink-dim); font-variant-numeric: tabular-nums; margin-top: 5px; }
+
+  /* ---------- Charts ---------- */
+
+  .charts { display: grid; }
+  .charts.of-3 { grid-template-columns: repeat(3, 1fr); }
+  .chart { padding: 24px 28px 28px; border-right: 1px solid var(--line); }
+  .chart:last-child { border-right: 0; }
+  .chart-note { margin: 8px 0 0; font-size: 0.75rem; color: var(--ink-faint); }
+
+  .donut-wrap { position: relative; display: grid; place-items: center; margin-top: 20px; }
+  .donut { width: 190px; height: 190px; }
+  .donut circle { fill: none; stroke-width: 4.25; }
+  .donut .track { stroke: var(--track); }
+  .donut .seg-signal { stroke: var(--signal); }
+  .donut .seg-warn   { stroke: var(--warn); }
+  .donut .seg-ink    { stroke: var(--ink); }
+  .donut .seg-dim    { stroke: #0d0d0d33; }
+
+  .donut-center { position: absolute; text-align: center; }
+  .donut-center .fig { font-family: var(--font-data); font-size: 1.875rem; font-weight: 600; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums slashed-zero; }
+  .donut-center .cap { margin: 6px 0 0; font-family: var(--font-data); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+  .legend { display: grid; gap: 11px; margin-top: 20px; }
+  .legend-row { display: grid; grid-template-columns: 11px minmax(0, 1fr) auto; gap: 11px; align-items: center; }
+  .legend-row .key { width: 11px; height: 11px; }
+  .legend-row .nm { font-size: 0.8125rem; color: var(--ink-dim); }
+  .legend-row .v { font-family: var(--font-data); font-size: 0.8125rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  .colchart { display: flex; align-items: flex-end; gap: 12px; height: 172px; margin-top: 20px; }
+  .col { flex: 1; display: grid; grid-template-rows: 1fr auto auto; gap: 8px; height: 100%; }
+  .col-stack { display: flex; align-items: flex-end; }
+  .col-fill { width: 100%; background: var(--track); }
+  .col-fill.is-peak { background: var(--signal); }
+  .col-fill.is-warn { background: var(--warn); }
+  .col-fill.is-ink  { background: #0d0d0d40; }
+  .col-val { font-family: var(--font-data); font-size: 0.75rem; font-weight: 500; text-align: center; font-variant-numeric: tabular-nums; }
+  .col-lab { font-family: var(--font-ui); font-size: 0.625rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; color: var(--ink-faint); }
+
+  /* ---------- Spec ---------- */
+
+  .spec { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .spec-block { border: 1px solid var(--line); background: var(--card); padding: 22px; }
+  .spec-block h3 { margin: 0 0 16px; font-size: 0.6875rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+  .rules { margin: 0; padding-left: 18px; display: grid; gap: 9px; }
+  .rules li { font-size: 0.8125rem; color: var(--ink-dim); line-height: 1.5; }
+  .rules li b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header class="board-head">
+  <p class="type-label">Fitbook · Scoreboard · dashboards</p>
+  <h1>Three roles, three dashboards</h1>
+  <p class="type-body">
+    Same light Scoreboard language as the schedule board: paper surface, mono numerals, occupancy
+    as a fill-bar, solid state chips. Each screen keeps exactly one blue block — for the member
+    it is the next booking, for staff it is the job waiting to be done, for admin it is occupancy.
+  </p>
+</header>
+
+<div class="board">
+
+  <!-- ============ 01 · MEMBER ============ -->
+  <div class="frame-wrap">
+    <p class="frame-name"><span class="type-label">01 · Member — home</span><span class="type-label">Book · cancel · my week</span></p>
+
+    <div class="frame">
+      <div class="top">
+        <div>
+          <p class="type-label">Northside Strength · Member</p>
+          <p class="who">Maria Nadeem</p>
+        </div>
+        <p class="type-label">Tuesday 9 Sep · 2 classes booked this week</p>
+      </div>
+
+      <!-- one blue block: the next booking -->
+      <div class="hero">
+        <div>
+          <p class="type-label">Your next class · Studio A</p>
+          <p class="hero-name">Conditioning</p>
+          <p class="hero-sub">Coach Mia · 17:30 · 45 min · spot 17</p>
+        </div>
+        <div class="hero-right">
+          <div class="hero-count">
+            <p class="type-label">Starts in</p>
+            <p class="big">05:12</p>
+          </div>
+          <button class="hero-btn">View booking</button>
+        </div>
+      </div>
+
+      <div class="sec-head">
+        <p class="type-label">My week</p>
+        <p class="type-action" style="color:var(--ink-dim)">All bookings</p>
+      </div>
+
+      <div class="rows">
+        <div class="row row-member">
+          <p class="row-when">Tue 9 Sep<em>17:30</em></p>
+          <div>
+            <p class="row-name">Conditioning</p>
+            <p class="row-coach">Coach Mia · Studio A</p>
+          </div>
+          <p class="chip-state chip-live">Booked</p>
+          <p class="type-action row-link">Cancel</p>
+        </div>
+
+        <div class="row row-member">
+          <p class="row-when">Thu 11 Sep<em>07:15</em></p>
+          <div>
+            <p class="row-name">Metcon 45</p>
+            <p class="row-coach">Coach Ali · Studio B</p>
+          </div>
+          <p class="chip-state chip-live">Booked</p>
+          <p class="type-action row-link">Cancel</p>
+        </div>
+
+        <div class="row row-member">
+          <p class="row-when">Sat 6 Sep<em>09:30</em></p>
+          <div>
+            <p class="row-name">Vinyasa Flow</p>
+            <p class="row-coach">Coach Dana · Studio A</p>
+          </div>
+          <p class="chip-state chip-off">Attended</p>
+          <p class="type-action row-link" style="color:var(--ink-faint)">Book again</p>
+        </div>
+
+        <div class="row row-member is-done">
+          <p class="row-when">Fri 5 Sep<em>18:45</em></p>
+          <div>
+            <p class="row-name">Strength Block</p>
+            <p class="row-coach">Cancelled by studio · Coach Ravi off</p>
+          </div>
+          <p class="chip-state chip-ended">Cancelled</p>
+          <p class="type-action row-link" style="color:var(--ink-faint)">—</p>
+        </div>
+      </div>
+
+      <div class="sec-head" style="border-top:1px solid var(--line)">
+        <p class="type-label">Your month</p>
+        <p class="type-action" style="color:var(--ink-dim)">September</p>
+      </div>
+
+      <div class="charts of-3" style="border-bottom:1px solid var(--line)">
+        <div class="chart">
+          <p class="type-label">Attendance rate</p>
+          <p class="chart-note">Showed up for 6 of the 8 classes you booked</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Attendance rate 75 percent">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155"></circle>
+                <circle class="seg-signal" cx="21" cy="21" r="15.9155" stroke-dasharray="75 25" stroke-dashoffset="0"></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">75%</p>
+              <p class="cap">6 of 8</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart">
+          <p class="type-label">What you book</p>
+          <p class="chart-note">Split of your bookings by category</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Bookings by category">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155"></circle>
+                <circle class="seg-signal" cx="21" cy="21" r="15.9155" stroke-dasharray="50 50" stroke-dashoffset="0"></circle>
+                <circle class="seg-warn" cx="21" cy="21" r="15.9155" stroke-dasharray="30 70" stroke-dashoffset="-50"></circle>
+                <circle class="seg-dim" cx="21" cy="21" r="15.9155" stroke-dasharray="20 80" stroke-dashoffset="-80"></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">08</p>
+              <p class="cap">Bookings</p>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-row"><span class="key" style="background:var(--signal)"></span><span class="nm">Yoga</span><span class="v">04</span></div>
+            <div class="legend-row"><span class="key" style="background:var(--warn)"></span><span class="nm">Cardio</span><span class="v">02</span></div>
+            <div class="legend-row"><span class="key" style="background:#0d0d0d33"></span><span class="nm">Strength</span><span class="v">02</span></div>
+          </div>
+        </div>
+
+        <div class="chart">
+          <p class="type-label">Classes per week</p>
+          <p class="chart-note">Last six weeks · goal is 3</p>
+          <div class="colchart">
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:50%"></div></div><p class="col-val">2</p><p class="col-lab">W31</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:75%"></div></div><p class="col-val">3</p><p class="col-lab">W32</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:25%"></div></div><p class="col-val">1</p><p class="col-lab">W33</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-peak" style="height:100%"></div></div><p class="col-val">4</p><p class="col-lab">W34</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:50%"></div></div><p class="col-val">2</p><p class="col-lab">W35</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:75%"></div></div><p class="col-val">3</p><p class="col-lab">W36</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-head">
+        <p class="type-label">Spots still open today</p>
+        <p class="type-action" style="color:var(--ink-dim)">Full schedule</p>
+      </div>
+
+      <div class="cards">
+        <div class="mini">
+          <div>
+            <div class="mini-top">
+              <p class="mini-time">17:30</p>
+              <span class="chip-state chip-warn">Almost full</span>
+            </div>
+            <p class="mini-name">Conditioning</p>
+            <p class="mini-coach">Coach Mia · 45 min</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill warn" style="width:80%"></div></div>
+            <p class="bar-cap">16 / 20 · 4 left</p>
+          </div>
+          <button class="btn-line is-off">Already booked</button>
+        </div>
+
+        <div class="mini">
+          <div>
+            <div class="mini-top">
+              <p class="mini-time">18:45</p>
+              <span class="chip-state chip-open">Open</span>
+            </div>
+            <p class="mini-name">Strength Block</p>
+            <p class="mini-coach">Coach Ravi · 60 min</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill" style="width:45%"></div></div>
+            <p class="bar-cap">09 / 20 · 11 left</p>
+          </div>
+          <button class="btn-line">Book</button>
+        </div>
+
+        <div class="mini">
+          <div>
+            <div class="mini-top">
+              <p class="mini-time">20:00</p>
+              <span class="chip-state chip-open">Open</span>
+            </div>
+            <p class="mini-name">Open Gym</p>
+            <p class="mini-coach">Unstaffed · 60 min</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill" style="width:25%"></div></div>
+            <p class="bar-cap">05 / 20 · 15 left</p>
+          </div>
+          <button class="btn-line">Book</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 02 · STAFF ============ -->
+  <div class="frame-wrap">
+    <p class="frame-name"><span class="type-label">02 · Staff — floor desk</span><span class="type-label">Roster · attendance · cancel session</span></p>
+
+    <div class="frame">
+      <div class="top">
+        <div>
+          <p class="type-label">Northside Strength · Staff</p>
+          <p class="who">Coach Dana · front desk</p>
+        </div>
+        <p class="type-label">Tuesday 9 Sep · 12:18</p>
+      </div>
+
+      <div class="stats of-3">
+        <div class="stat">
+          <p class="type-label">Sessions today</p>
+          <p class="fig">06</p>
+          <p class="note">1 cancelled · 5 running</p>
+        </div>
+        <div class="stat">
+          <p class="type-label">Almost full</p>
+          <p class="fig">02</p>
+          <p class="note">80% or more booked</p>
+        </div>
+        <div class="stat">
+          <p class="type-label">Attendance pending</p>
+          <p class="fig">01</p>
+          <p class="note">Finished, not marked yet</p>
+        </div>
+      </div>
+
+      <!-- one blue block: the job waiting -->
+      <div class="band">
+        <div>
+          <p class="type-label">Needs attendance</p>
+          <p class="band-title">Metcon 45 · 07:15</p>
+          <p class="band-sub">20 booked · finished 4 hours ago · nobody marked present</p>
+        </div>
+        <button class="hero-btn">Open roster</button>
+      </div>
+
+      <div class="sec-head">
+        <p class="type-label">Today's sessions</p>
+        <p class="type-action" style="color:var(--ink-dim)">New session</p>
+      </div>
+
+      <div class="rows">
+        <div class="row row-staff is-done">
+          <p class="row-time">06:00</p>
+          <div>
+            <p class="row-name">Sunrise Row</p>
+            <p class="row-coach">Coach Dana · marked 12 present</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill dim" style="width:60%"></div></div>
+            <p class="bar-cap">12 / 20</p>
+          </div>
+          <p class="chip-state chip-ended">Ended</p>
+          <p class="type-action row-link">Roster</p>
+        </div>
+
+        <div class="row row-staff">
+          <p class="row-time">07:15</p>
+          <div>
+            <p class="row-name">Metcon 45</p>
+            <p class="row-coach">Coach Ali · attendance pending</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill dim" style="width:100%"></div></div>
+            <p class="bar-cap">20 / 20</p>
+          </div>
+          <p class="chip-state chip-warn">Mark now</p>
+          <p class="type-action row-link">Roster</p>
+        </div>
+
+        <div class="row row-staff is-live">
+          <p class="row-time">12:00</p>
+          <div>
+            <p class="row-name">Metcon</p>
+            <p class="row-coach">Coach Ali · 18 min elapsed</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill" style="width:95%"></div></div>
+            <p class="bar-cap">19 / 20</p>
+          </div>
+          <p class="chip-state chip-live">Live</p>
+          <p class="type-action row-link">Roster</p>
+        </div>
+
+        <div class="row row-staff">
+          <p class="row-time">17:30</p>
+          <div>
+            <p class="row-name">Conditioning</p>
+            <p class="row-coach">Coach Mia</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill warn" style="width:80%"></div></div>
+            <p class="bar-cap">16 / 20</p>
+          </div>
+          <p class="chip-state chip-warn">Almost full</p>
+          <p class="type-action row-link">Roster</p>
+        </div>
+
+        <div class="row row-staff is-done">
+          <p class="row-time">18:45</p>
+          <div>
+            <p class="row-name">Strength Block</p>
+            <p class="row-coach">Cancelled · Coach Ravi off sick</p>
+          </div>
+          <div class="bar">
+            <div class="bar-track"><div class="bar-fill dim" style="width:45%"></div></div>
+            <p class="bar-cap">09 / 20 refunded</p>
+          </div>
+          <p class="chip-state chip-ended">Cancelled</p>
+          <p class="type-action row-link">Roster</p>
+        </div>
+      </div>
+
+      <div class="sec-head" style="border-top:1px solid var(--line)">
+        <p class="type-label">Roster · Metcon 12:00 · 19 booked</p>
+        <p class="type-action" style="color:var(--ink-dim)">Mark all present</p>
+      </div>
+
+      <div class="rows">
+        <div class="row row-roster">
+          <p class="row-idx">01</p>
+          <div><p class="row-name" style="font-size:0.9375rem">Maria Nadeem</p></div>
+          <div class="pair"><span class="toggle on">Present</span><span class="toggle">Absent</span></div>
+        </div>
+        <div class="row row-roster">
+          <p class="row-idx">02</p>
+          <div><p class="row-name" style="font-size:0.9375rem">Hamza Sheikh</p></div>
+          <div class="pair"><span class="toggle on">Present</span><span class="toggle">Absent</span></div>
+        </div>
+        <div class="row row-roster">
+          <p class="row-idx">03</p>
+          <div><p class="row-name" style="font-size:0.9375rem">Ayesha Khan</p></div>
+          <div class="pair"><span class="toggle">Present</span><span class="toggle on">Absent</span></div>
+        </div>
+        <div class="row row-roster">
+          <p class="row-idx">04</p>
+          <div><p class="row-name" style="font-size:0.9375rem">Bilal Ahmed</p></div>
+          <div class="pair"><span class="toggle">Present</span><span class="toggle">Absent</span></div>
+        </div>
+      </div>
+
+      <div class="sec-head" style="border-top:1px solid var(--line)">
+        <p class="type-label">Today in numbers</p>
+        <p class="type-action" style="color:var(--ink-dim)">Tuesday 9 Sep</p>
+      </div>
+
+      <div class="charts of-3">
+        <div class="chart">
+          <p class="type-label">Capacity used today</p>
+          <p class="chart-note">81 booked across 120 seats on the floor</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Capacity used 68 percent">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155"></circle>
+                <circle class="seg-signal" cx="21" cy="21" r="15.9155" stroke-dasharray="68 32" stroke-dashoffset="0"></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">68%</p>
+              <p class="cap">81 / 120</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart">
+          <p class="type-label">Attendance · Metcon 12:00</p>
+          <p class="chart-note">19 booked · 3 still unmarked</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Attendance breakdown">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155"></circle>
+                <circle class="seg-signal" cx="21" cy="21" r="15.9155" stroke-dasharray="68 32" stroke-dashoffset="0"></circle>
+                <circle class="seg-warn" cx="21" cy="21" r="15.9155" stroke-dasharray="16 84" stroke-dashoffset="-68"></circle>
+                <circle class="seg-dim" cx="21" cy="21" r="15.9155" stroke-dasharray="16 84" stroke-dashoffset="-84"></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">13</p>
+              <p class="cap">Present</p>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-row"><span class="key" style="background:var(--signal)"></span><span class="nm">Present</span><span class="v">13</span></div>
+            <div class="legend-row"><span class="key" style="background:var(--warn)"></span><span class="nm">Absent</span><span class="v">03</span></div>
+            <div class="legend-row"><span class="key" style="background:#0d0d0d33"></span><span class="nm">Unmarked</span><span class="v">03</span></div>
+          </div>
+        </div>
+
+        <div class="chart">
+          <p class="type-label">Bookings by session</p>
+          <p class="chart-note">Where the floor gets busy · capacity 20</p>
+          <div class="colchart">
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:60%"></div></div><p class="col-val">12</p><p class="col-lab">06</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-warn" style="height:100%"></div></div><p class="col-val">20</p><p class="col-lab">07</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-peak" style="height:95%"></div></div><p class="col-val">19</p><p class="col-lab">12</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-warn" style="height:80%"></div></div><p class="col-val">16</p><p class="col-lab">17</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:45%"></div></div><p class="col-val">09</p><p class="col-lab">18</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:25%"></div></div><p class="col-val">05</p><p class="col-lab">20</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 03 · ADMIN ============ -->
+  <div class="frame-wrap">
+    <p class="frame-name"><span class="type-label">03 · Admin — overview</span><span class="type-label">Occupancy · popularity · people</span></p>
+
+    <div class="frame">
+      <div class="top">
+        <div>
+          <p class="type-label">Northside Strength · Admin</p>
+          <p class="who">Week of 8 – 14 Sep</p>
+        </div>
+        <p class="type-label">Trainers · Classes · Users · Sessions</p>
+      </div>
+
+      <!-- one blue block: the headline number -->
+      <div class="stats of-4">
+        <div class="stat is-signal">
+          <p class="type-label">Avg occupancy</p>
+          <p class="fig">78%</p>
+          <p class="note">Booked ÷ capacity, this week</p>
+        </div>
+        <div class="stat">
+          <p class="type-label">Bookings this week</p>
+          <p class="fig">214</p>
+          <p class="note">+18 vs last week</p>
+        </div>
+        <div class="stat">
+          <p class="type-label">Members</p>
+          <p class="fig">186</p>
+          <p class="note">9 registered this week</p>
+        </div>
+        <div class="stat">
+          <p class="type-label">Sessions</p>
+          <p class="fig">42</p>
+          <p class="note">2 cancelled</p>
+        </div>
+      </div>
+
+      <div class="split-2">
+        <div>
+          <div class="sec-head">
+            <p class="type-label">Occupancy by class</p>
+            <p class="type-action" style="color:var(--ink-dim)">This week</p>
+          </div>
+
+          <div class="rows">
+            <div class="row row-admin">
+              <div>
+                <p class="row-name">Vinyasa Flow</p>
+                <p class="row-coach">Yoga · Coach Dana · 6 sessions</p>
+              </div>
+              <div class="bar">
+                <div class="bar-track"><div class="bar-fill" style="width:92%"></div></div>
+                <p class="bar-cap">83 / 90 booked</p>
+              </div>
+              <p class="chip-state chip-live">92%</p>
+            </div>
+
+            <div class="row row-admin">
+              <div>
+                <p class="row-name">Metcon 45</p>
+                <p class="row-coach">Cardio · Coach Ali · 5 sessions</p>
+              </div>
+              <div class="bar">
+                <div class="bar-track"><div class="bar-fill warn" style="width:85%"></div></div>
+                <p class="bar-cap">85 / 100 booked</p>
+              </div>
+              <p class="chip-state chip-warn">85%</p>
+            </div>
+
+            <div class="row row-admin">
+              <div>
+                <p class="row-name">Conditioning</p>
+                <p class="row-coach">Strength · Coach Mia · 4 sessions</p>
+              </div>
+              <div class="bar">
+                <div class="bar-track"><div class="bar-fill" style="width:70%"></div></div>
+                <p class="bar-cap">56 / 80 booked</p>
+              </div>
+              <p class="chip-state chip-open">70%</p>
+            </div>
+
+            <div class="row row-admin">
+              <div>
+                <p class="row-name">Spin Sprint</p>
+                <p class="row-coach">Cardio · Coach Ravi · 3 sessions</p>
+              </div>
+              <div class="bar">
+                <div class="bar-track"><div class="bar-fill" style="width:52%"></div></div>
+                <p class="bar-cap">31 / 60 booked</p>
+              </div>
+              <p class="chip-state chip-open">52%</p>
+            </div>
+
+            <div class="row row-admin">
+              <div>
+                <p class="row-name">Open Gym</p>
+                <p class="row-coach">Unstaffed · 7 sessions</p>
+              </div>
+              <div class="bar">
+                <div class="bar-track"><div class="bar-fill dim" style="width:28%"></div></div>
+                <p class="bar-cap">39 / 140 booked</p>
+              </div>
+              <p class="chip-state chip-open">28%</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="sec-head" style="padding-inline:26px">
+            <p class="type-label">Most booked</p>
+          </div>
+
+          <div class="panel-pad">
+            <div class="top-class">
+              <p class="type-label">#1</p>
+              <p class="name" style="margin-top:8px">Vinyasa Flow</p>
+              <p class="val">83 bookings · 6 sessions</p>
+            </div>
+            <div class="top-class">
+              <p class="type-label">#2</p>
+              <p class="name" style="margin-top:8px">Metcon 45</p>
+              <p class="val">85 bookings · 5 sessions</p>
+            </div>
+            <div class="top-class">
+              <p class="type-label">#3</p>
+              <p class="name" style="margin-top:8px">Conditioning</p>
+              <p class="val">56 bookings · 4 sessions</p>
+            </div>
+          </div>
+
+          <div class="sec-head" style="padding-inline:26px; border-top:1px solid var(--line)">
+            <p class="type-label">Gym setup</p>
+          </div>
+
+          <div class="panel-pad">
+            <div class="top-class">
+              <p class="type-label">Trainers</p>
+              <p class="name" style="margin-top:8px">06 active</p>
+              <p class="val">1 on leave this week</p>
+            </div>
+            <div class="top-class">
+              <p class="type-label">Class templates</p>
+              <p class="name" style="margin-top:8px">09 defined</p>
+              <p class="val">Yoga · Cardio · Strength</p>
+            </div>
+            <div class="top-class">
+              <p class="type-label">Staff accounts</p>
+              <p class="name" style="margin-top:8px">03 accounts</p>
+              <p class="val">1 admin · 2 staff</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec-head" style="border-top:1px solid var(--line)">
+        <p class="type-label">This week in numbers</p>
+        <p class="type-action" style="color:var(--ink-dim)">8 – 14 Sep</p>
+      </div>
+
+      <div class="charts of-3">
+        <div class="chart">
+          <p class="type-label">Occupancy</p>
+          <p class="chart-note">274 seats booked of 350 offered</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Average occupancy 78 percent">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155"></circle>
+                <circle class="seg-signal" cx="21" cy="21" r="15.9155" stroke-dasharray="78 22" stroke-dashoffset="0"></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">78%</p>
+              <p class="cap">274 / 350</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart">
+          <p class="type-label">Bookings by category</p>
+          <p class="chart-note">214 bookings this week</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Bookings by category">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155"></circle>
+                <circle class="seg-signal" cx="21" cy="21" r="15.9155" stroke-dasharray="39 61" stroke-dashoffset="0"></circle>
+                <circle class="seg-warn" cx="21" cy="21" r="15.9155" stroke-dasharray="34 66" stroke-dashoffset="-39"></circle>
+                <circle class="seg-dim" cx="21" cy="21" r="15.9155" stroke-dasharray="27 73" stroke-dashoffset="-73"></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">214</p>
+              <p class="cap">Bookings</p>
+            </div>
+          </div>
+          <div class="legend">
+            <div class="legend-row"><span class="key" style="background:var(--signal)"></span><span class="nm">Yoga</span><span class="v">83</span></div>
+            <div class="legend-row"><span class="key" style="background:var(--warn)"></span><span class="nm">Cardio</span><span class="v">73</span></div>
+            <div class="legend-row"><span class="key" style="background:#0d0d0d33"></span><span class="nm">Strength</span><span class="v">58</span></div>
+          </div>
+        </div>
+
+        <div class="chart">
+          <p class="type-label">Bookings by day</p>
+          <p class="chart-note">Friday is the busiest night</p>
+          <div class="colchart">
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:67%"></div></div><p class="col-val">28</p><p class="col-lab">Mon</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:81%"></div></div><p class="col-val">34</p><p class="col-lab">Tue</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:74%"></div></div><p class="col-val">31</p><p class="col-lab">Wed</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-warn" style="height:90%"></div></div><p class="col-val">38</p><p class="col-lab">Thu</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-peak" style="height:100%"></div></div><p class="col-val">42</p><p class="col-lab">Fri</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:62%"></div></div><p class="col-val">26</p><p class="col-lab">Sat</p></div>
+            <div class="col"><div class="col-stack"><div class="col-fill is-ink" style="height:36%"></div></div><p class="col-val">15</p><p class="col-lab">Sun</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SPEC ============ -->
+  <div class="spec">
+    <div class="spec-block">
+      <h3>Member sees</h3>
+      <ul class="rules">
+        <li><b>Next booking</b> as the blue block — time, coach, spot number.</li>
+        <li><b>My week</b>: booked, attended, cancelled-by-studio.</li>
+        <li><b>Spots open today</b> with a Book action; already-booked cards go inert.</li>
+        <li>Never: occupancy %, other members' names, gym totals.</li>
+      </ul>
+    </div>
+
+    <div class="spec-block">
+      <h3>Staff sees</h3>
+      <ul class="rules">
+        <li><b>Attendance pending</b> is the blue block — the one job waiting.</li>
+        <li>Today's sessions with booked / capacity, live and almost-full states.</li>
+        <li><b>Roster</b> per session with Present / Absent toggles, plus cancel a session.</li>
+        <li>Never: week-long popularity, member counts, role management.</li>
+      </ul>
+    </div>
+
+    <div class="spec-block">
+      <h3>Admin sees</h3>
+      <ul class="rules">
+        <li><b>Avg occupancy</b> is the blue block — the number the owner asks for.</li>
+        <li>Occupancy per class template, ranked most-booked, gym setup counts.</li>
+        <li>Entry points to trainers, class templates, users and roles.</li>
+        <li>Never: attendance toggles or booking on a member's behalf.</li>
+      </ul>
+    </div>
+
+    <div class="spec-block" style="grid-column: span 3">
+      <h3>Chart rules</h3>
+      <ul class="rules" style="grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px">
+        <li><b>Donut = share of one whole</b> (occupancy, present vs absent). Bars compare over time.</li>
+        <li>Max <b>three slices</b> per donut, ordered signal &rarr; warn &rarr; dim. More than three becomes a bar list.</li>
+        <li>The donut hole always carries the figure in mono, with a small caption under it.</li>
+        <li>Thin rings — this is a scoreboard, not a pie chart.</li>
+        <li>One highlighted bar per chart (the peak). The rest stay neutral.</li>
+        <li>Amber means <b>near or over a limit</b>, never just "second place".</li>
+        <li>Every chart keeps the raw count visible — a percentage alone is never enough.</li>
+        <li>Square corners, no shadows, no gradients, no 3D, no load animation.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

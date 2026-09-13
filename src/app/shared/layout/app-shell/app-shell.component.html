@@ -1,0 +1,8 @@
+<nav class="shell-nav">
+  <p>FitBook</p>
+  @if (isAdmin()) {
+    <a routerLink="/admin/trainers" routerLinkActive="active">Trainers</a>
+  }
+  <button type="button" (click)="logout()">Logout</button>
+</nav>
+<router-outlet />

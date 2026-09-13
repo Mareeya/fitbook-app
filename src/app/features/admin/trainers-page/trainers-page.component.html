@@ -1,0 +1,116 @@
+<main class="trainers-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Admin workspace</p>
+      <h1>Trainers</h1>
+      <p class="subtitle">Add, update, and manage your coaching team.</p>
+    </div>
+    <div class="count-block" aria-label="Total trainers">
+      <span>Total trainers</span>
+      <strong>{{ trainers.length }}</strong>
+    </div>
+  </header>
+
+  <div class="content-grid">
+    <section class="form-card">
+      <p class="section-label">{{ editingTrainerId === null ? 'New trainer' : 'Edit trainer' }}</p>
+      <h2>{{ editingTrainerId === null ? 'Add a trainer' : 'Update trainer' }}</h2>
+
+      <form [formGroup]="trainerForm" (ngSubmit)="saveTrainer()" novalidate>
+        <label for="trainer-name">Full name</label>
+        <input
+          id="trainer-name"
+          type="text"
+          formControlName="name"
+          maxlength="120"
+          placeholder="e.g. Ayesha Khan"
+          autocomplete="name"
+        />
+        @if (trainerForm.controls.name.touched && trainerForm.controls.name.invalid) {
+          <p class="field-error">Enter a trainer name (maximum 120 characters).</p>
+        }
+
+        <label for="trainer-specialty">Specialty</label>
+        <input
+          id="trainer-specialty"
+          type="text"
+          formControlName="specialty"
+          maxlength="80"
+          placeholder="e.g. Pilates"
+        />
+        @if (trainerForm.controls.specialty.touched && trainerForm.controls.specialty.invalid) {
+          <p class="field-error">Enter a specialty (maximum 80 characters).</p>
+        }
+
+        <div class="form-actions">
+          <button class="primary-button" type="submit" [disabled]="isSaving">
+            @if (isSaving) {
+              Saving...
+            } @else if (editingTrainerId === null) {
+              Add trainer
+            } @else {
+              Save changes
+            }
+          </button>
+
+          @if (editingTrainerId !== null) {
+            <button class="secondary-button" type="button" (click)="cancelEdit()" [disabled]="isSaving">
+              Cancel
+            </button>
+          }
+        </div>
+      </form>
+    </section>
+
+    <section class="list-card">
+      <div class="list-header">
+        <div>
+          <p class="section-label">Directory</p>
+          <h2>Current trainers</h2>
+        </div>
+        <button class="text-button" type="button" (click)="loadTrainers()" [disabled]="isLoading">
+          Refresh
+        </button>
+      </div>
+
+      @if (isLoading) {
+        <div class="empty-state">Loading trainers...</div>
+      } @else if (trainers.length === 0) {
+        <div class="empty-state">
+          <strong>No trainers yet.</strong>
+          <span>Use the form to add the first trainer.</span>
+        </div>
+      } @else {
+        <div class="trainer-list">
+          @for (trainer of trainers; track trainer.id; let position = $index) {
+            <article class="trainer-row" [class.is-editing]="editingTrainerId === trainer.id">
+              <span class="row-number">{{ position + 1 }}</span>
+              <div class="trainer-details">
+                <strong>{{ trainer.name }}</strong>
+                <span>{{ trainer.specialty }}</span>
+              </div>
+              <div class="row-actions">
+                <button
+                  class="edit-button"
+                  type="button"
+                  (click)="editTrainer(trainer)"
+                  [disabled]="isSaving || deletingTrainerId === trainer.id"
+                >
+                  Edit
+                </button>
+                <button
+                  class="delete-button"
+                  type="button"
+                  (click)="deleteTrainer(trainer)"
+                  [disabled]="isSaving || deletingTrainerId === trainer.id"
+                >
+                  {{ deletingTrainerId === trainer.id ? 'Deleting...' : 'Delete' }}
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+  </div>
+</main>

@@ -1,0 +1,33 @@
+.shell-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #dedcd2;
+}
+
+.shell-nav p {
+  margin: 0 12px 0 0;
+  font-weight: 700;
+}
+
+.shell-nav a {
+  color: #0d0d0d99;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.shell-nav a.active {
+  color: #2e7dff;
+  font-weight: 600;
+}
+
+.shell-nav button {
+  margin-left: auto;
+  padding: 8px 12px;
+  border: 0;
+  background: #2e7dff;
+  color: white;
+  cursor: pointer;
+}

@@ -1,0 +1,13 @@
+<form [formGroup]="loginForm" (ngSubmit)="login()">
+  <h1>Admin login</h1>
+
+  <label for="email">Email</label>
+  <input id="email" type="email" formControlName="email" />
+
+  <label for="password">Password</label>
+  <input id="password" type="password" formControlName="password" />
+
+  <button type="submit" [disabled]="isLoading">
+    {{ isLoading ? 'Signing in...' : 'Login' }}
+  </button>
+</form>
