@@ -2,7 +2,15 @@
   <p>FitBook</p>
   @if (isAdmin()) {
     <a routerLink="/admin/trainers" routerLinkActive="active">Trainers</a>
+    <a routerLink="/admin/classes" routerLinkActive="active">Classes</a>
   }
+  @if (isTrainer()) {
+    <a routerLink="/trainer" routerLinkActive="active">My Classes</a>
+  }
+  @if (isMember()) {
+    <a routerLink="/home" routerLinkActive="active">Home</a>
+  }
+  <span class="shell-user">{{ userName() }}</span>
   <button type="button" (click)="logout()">Logout</button>
 </nav>
 <router-outlet />

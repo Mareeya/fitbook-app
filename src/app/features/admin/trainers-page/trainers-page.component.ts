@@ -1,9 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TrainerRequest } from '../../../models/trainer-request.model';
-import { TrainerResponse } from '../../../models/trainer-response.model';
-import { TrainersService } from './trainers.service';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TrainerRequest } from './models/trainer-request.model';
+import { TrainerResponse } from './models/trainer-response.model';
+import { apiErrorMessage } from '../../../shared/helpers/api-error';
+import { AppValidators } from '../../../shared/validators/app.validators';
+import { TrainersService } from './services/trainers.service';
 
 @Component({
   selector: 'app-trainers-page',
@@ -12,18 +14,18 @@ import { TrainersService } from './trainers.service';
   styleUrl: './trainers-page.component.scss',
 })
 export class TrainersPageComponent implements OnInit {
-  private readonly formBuilder = inject(FormBuilder);
   private readonly trainersService = inject(TrainersService);
 
   trainers: TrainerResponse[] = [];
   editingTrainerId: number | null = null;
-  deletingTrainerId: number | null = null;
   isLoading = false;
   isSaving = false;
 
-  trainerForm = this.formBuilder.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(120), Validators.pattern(/\S/)]],
-    specialty: ['', [Validators.required, Validators.maxLength(80), Validators.pattern(/\S/)]],
+  trainerForm = new FormGroup({
+    name: new FormControl('', [Validators.required, Validators.maxLength(120), AppValidators.personName]),
+    email: new FormControl('', [Validators.required, Validators.email, Validators.maxLength(256)]),
+    password: new FormControl('', [Validators.maxLength(100), AppValidators.optionalPassword]),
+    specialty: new FormControl('', [Validators.required, Validators.maxLength(80), AppValidators.label]),
   });
 
   ngOnInit(): void {
@@ -46,22 +48,29 @@ export class TrainersPageComponent implements OnInit {
   }
 
   saveTrainer(): void {
+    const formValue = this.trainerForm.value;
+    const password = (formValue.password || '').trim();
+
+    if (this.editingTrainerId === null && !password) {
+      this.trainerForm.controls.password.markAsTouched();
+      alert('Please enter name, email, password, and specialty.');
+      return;
+    }
+
     if (this.trainerForm.invalid) {
       this.trainerForm.markAllAsTouched();
-      alert('Please enter trainer name and specialty.');
+      alert('Please enter a valid name, email, and specialty.');
       return;
     }
 
     const request: TrainerRequest = {
-      name: this.trainerForm.controls.name.value.trim(),
-      specialty: this.trainerForm.controls.specialty.value.trim(),
+      name: (formValue.name || '').trim(),
+      email: (formValue.email || '').trim(),
+      password,
+      specialty: (formValue.specialty || '').trim(),
     };
 
     if (this.editingTrainerId !== null) {
-      const ok = confirm('Save changes to this trainer?');
-      if (!ok) {
-        return;
-      }
       this.updateTrainer(this.editingTrainerId, request);
       return;
     }
@@ -73,6 +82,8 @@ export class TrainersPageComponent implements OnInit {
     this.editingTrainerId = trainer.id;
     this.trainerForm.setValue({
       name: trainer.name,
+      email: trainer.email,
+      password: '',
       specialty: trainer.specialty,
     });
   }
@@ -87,21 +98,16 @@ export class TrainersPageComponent implements OnInit {
       return;
     }
 
-    this.deletingTrainerId = trainer.id;
-
     this.trainersService.delete(trainer.id).subscribe({
       next: () => {
         this.trainers = this.trainers.filter((item) => item.id !== trainer.id);
         alert('Trainer deleted successfully.');
-        this.deletingTrainerId = null;
-
         if (this.editingTrainerId === trainer.id) {
           this.resetForm();
         }
       },
       error: (error: HttpErrorResponse) => {
         alert(this.getErrorMessage(error));
-        this.deletingTrainerId = null;
       },
     });
   }
@@ -144,26 +150,19 @@ export class TrainersPageComponent implements OnInit {
 
   private resetForm(): void {
     this.editingTrainerId = null;
-    this.trainerForm.reset();
+    this.trainerForm.reset({
+      name: '',
+      email: '',
+      password: '',
+      specialty: '',
+    });
   }
 
   private getErrorMessage(error: HttpErrorResponse): string {
-    if (error.status === 0) {
-      return 'Cannot connect to the API. Please make sure the backend is running.';
-    }
-
-    if (error.status === 409) {
+    if (error.status === 409 && typeof error.error !== 'string') {
       return 'This trainer is assigned to a class and cannot be deleted.';
     }
 
-    if (error.status === 404) {
-      return 'Trainer was not found. Refresh the list and try again.';
-    }
-
-    if (error.status === 400) {
-      return 'Please check the entered information.';
-    }
-
-    return 'Something went wrong. Please try again.';
+    return apiErrorMessage(error, 'Something went wrong. Please try again.');
   }
 }

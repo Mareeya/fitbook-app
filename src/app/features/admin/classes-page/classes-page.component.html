@@ -1,1 +1,82 @@
-<p>Admin — FitnessClass templates (Yoga, duration, capacity)</p>
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1>Classes</h1>
+      <p>Add, update, and manage classes.</p>
+    </div>
+    <div class="count">
+      <span>Total</span>
+      <strong>{{ classes.length }}</strong>
+    </div>
+  </header>
+
+  <div class="content">
+    <section class="card">
+      <h2>{{ editingClassId === null ? 'Add a class' : 'Update class' }}</h2>
+
+      <form [formGroup]="classForm" (ngSubmit)="saveClass()">
+        <label for="class-name">Name</label>
+        <input id="class-name" type="text" formControlName="name" />
+        @if (classForm.controls.name.touched && classForm.controls.name.hasError('required')) {
+          <small>Enter a class name.</small>
+        }
+        @if (classForm.controls.name.touched && classForm.controls.name.hasError('pattern')) {
+          <small>Use letters and numbers only. Spaces, apostrophes, and hyphens are allowed.</small>
+        }
+
+        <label for="class-category">Category</label>
+        <select id="class-category" formControlName="categoryId">
+          @for (category of categories; track category.id) {
+            <option [value]="category.id">{{ category.value }}</option>
+          }
+        </select>
+
+        <label for="class-trainer">Trainer</label>
+        <select id="class-trainer" formControlName="trainerId">
+          @for (trainer of trainers; track trainer.id) {
+            <option [value]="trainer.id">{{ trainer.name }}</option>
+          }
+        </select>
+
+        <label for="class-capacity">Capacity</label>
+        <input id="class-capacity" type="number" formControlName="initCapacity" />
+        @if (classForm.controls.initCapacity.touched && classForm.controls.initCapacity.invalid) {
+          <small>Capacity must be between 1 and 200.</small>
+        }
+
+        <div class="actions">
+          <button type="submit">
+            {{ editingClassId === null ? 'Add class' : 'Save changes' }}
+          </button>
+          @if (editingClassId !== null) {
+            <button class="secondary" type="button" (click)="cancelEdit()">Cancel</button>
+          }
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="list-header">
+        <h2>Current classes</h2>
+        <button class="secondary" type="button" (click)="loadClasses()">Refresh</button>
+      </div>
+
+      @if (classes.length === 0) {
+        <p>No classes yet.</p>
+      } @else {
+        @for (gymClass of classes; track gymClass.id) {
+          <div class="row">
+            <div>
+              <strong>{{ gymClass.name }}</strong>
+              <p>{{ gymClass.categoryName }} · {{ gymClass.trainerName }} · {{ gymClass.initCapacity }} seats</p>
+            </div>
+            <div class="actions">
+              <button class="secondary" type="button" (click)="editClass(gymClass)">Edit</button>
+              <button class="delete" type="button" (click)="deleteClass(gymClass)">Delete</button>
+            </div>
+          </div>
+        }
+      }
+    </section>
+  </div>
+</main>

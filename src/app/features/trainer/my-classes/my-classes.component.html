@@ -1,0 +1,59 @@
+<main class="dash">
+  <section class="frame">
+    <header class="top">
+      <div>
+        <p class="label">FitBook · Trainer</p>
+        <p class="who">{{ greeting }}, {{ firstName }}</p>
+      </div>
+      <p class="label">{{ todayLabel }}</p>
+    </header>
+
+    <div class="stats">
+      <div class="stat">
+        <p class="label">Sessions today</p>
+        <p class="fig">3</p>
+        <p class="note">On the floor today</p>
+      </div>
+      <div class="stat">
+        <p class="label">Total members</p>
+        <p class="fig">47</p>
+        <p class="note">Across your classes</p>
+      </div>
+    </div>
+
+    <div class="sec-head">
+      <p class="label">My classes</p>
+      <p class="label">{{ classes.length }} assigned</p>
+    </div>
+
+    @if (isLoading) {
+      <p class="empty">Loading classes...</p>
+    } @else if (classes.length === 0) {
+      <p class="empty">No classes are assigned to you yet.</p>
+    } @else {
+      <div class="rows">
+        @for (gymClass of classes; track gymClass.id) {
+          <article class="row">
+            <div>
+              <p class="row-name">{{ gymClass.name }}</p>
+              <p class="row-meta">{{ gymClass.categoryName }} · {{ gymClass.initCapacity }} seats</p>
+            </div>
+            <div class="bar">
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="gymClass.averageFillRate"></div>
+              </div>
+              <p class="bar-cap">
+                @if (gymClass.sessionsThisMonth === 0) {
+                  No sessions yet
+                } @else {
+                  {{ gymClass.averageFillRate }}% avg fill
+                }
+              </p>
+            </div>
+            <p class="row-stat">{{ gymClass.sessionsThisMonth }} this month</p>
+          </article>
+        }
+      </div>
+    }
+  </section>
+</main>

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from '../../../features/auth/auth.service';
+import { AuthService } from '../../../features/auth/services/auth.service';
 
 @Component({
   selector: 'app-app-shell',
@@ -14,6 +14,18 @@ export class AppShellComponent {
 
   isAdmin(): boolean {
     return this.authService.isAdmin();
+  }
+
+  isTrainer(): boolean {
+    return this.authService.isTrainer();
+  }
+
+  isMember(): boolean {
+    return this.authService.isMember();
+  }
+
+  userName(): string {
+    return this.authService.getUser()?.name ?? '';
   }
 
   logout(): void {

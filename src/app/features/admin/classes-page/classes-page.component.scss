@@ -1,0 +1,111 @@
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+
+.page-header,
+.list-header,
+.row,
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+h1,
+h2,
+p {
+  margin: 0 0 8px;
+}
+
+p {
+  color: #666;
+}
+
+.count {
+  min-width: 90px;
+  padding: 12px 18px;
+  background: #2e7dff;
+  color: #fff;
+  text-align: center;
+}
+
+.count span,
+.count strong {
+  display: block;
+}
+
+.count strong {
+  font-size: 28px;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+}
+
+.card {
+  padding: 20px;
+  border: 1px solid #dedcd2;
+  background: #fff;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 6px 0 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+small {
+  display: block;
+  margin: -6px 0 8px;
+  color: #b42318;
+}
+
+button {
+  padding: 9px 12px;
+  border: 0;
+  background: #2e7dff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.secondary {
+  border: 1px solid #2e7dff;
+  background: #fff;
+  color: #2e7dff;
+}
+
+.delete {
+  background: #b42318;
+}
+
+.row {
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.row p {
+  margin: 4px 0 0;
+}

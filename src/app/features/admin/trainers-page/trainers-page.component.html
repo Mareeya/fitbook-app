@@ -1,115 +1,87 @@
-<main class="trainers-page">
+<main class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Admin workspace</p>
       <h1>Trainers</h1>
-      <p class="subtitle">Add, update, and manage your coaching team.</p>
+      <p>Add, update, and manage trainers.</p>
     </div>
-    <div class="count-block" aria-label="Total trainers">
-      <span>Total trainers</span>
+    <div class="count">
+      <span>Total</span>
       <strong>{{ trainers.length }}</strong>
     </div>
   </header>
 
-  <div class="content-grid">
-    <section class="form-card">
-      <p class="section-label">{{ editingTrainerId === null ? 'New trainer' : 'Edit trainer' }}</p>
+  <div class="content">
+    <section class="card">
       <h2>{{ editingTrainerId === null ? 'Add a trainer' : 'Update trainer' }}</h2>
 
-      <form [formGroup]="trainerForm" (ngSubmit)="saveTrainer()" novalidate>
+      <form [formGroup]="trainerForm" (ngSubmit)="saveTrainer()">
         <label for="trainer-name">Full name</label>
-        <input
-          id="trainer-name"
-          type="text"
-          formControlName="name"
-          maxlength="120"
-          placeholder="e.g. Ayesha Khan"
-          autocomplete="name"
-        />
-        @if (trainerForm.controls.name.touched && trainerForm.controls.name.invalid) {
-          <p class="field-error">Enter a trainer name (maximum 120 characters).</p>
+        <input id="trainer-name" type="text" formControlName="name" />
+        @if (trainerForm.controls.name.touched && trainerForm.controls.name.hasError('required')) {
+          <small>Enter a name.</small>
+        }
+        @if (trainerForm.controls.name.touched && trainerForm.controls.name.hasError('pattern')) {
+          <small>Use letters only. Spaces, apostrophes, and hyphens are allowed.</small>
+        }
+
+        <label for="trainer-email">Email</label>
+        <input id="trainer-email" type="email" formControlName="email" />
+        @if (trainerForm.controls.email.touched && trainerForm.controls.email.invalid) {
+          <small>Enter a valid email.</small>
+        }
+
+        <label for="trainer-password">Password</label>
+        <input id="trainer-password" type="password" formControlName="password" />
+        @if (editingTrainerId !== null) {
+          <p>Leave password empty to keep the current password.</p>
+        }
+        @if (trainerForm.controls.password.touched && trainerForm.controls.password.hasError('pattern')) {
+          <small>Password must be at least 8 characters with no spaces.</small>
         }
 
         <label for="trainer-specialty">Specialty</label>
-        <input
-          id="trainer-specialty"
-          type="text"
-          formControlName="specialty"
-          maxlength="80"
-          placeholder="e.g. Pilates"
-        />
-        @if (trainerForm.controls.specialty.touched && trainerForm.controls.specialty.invalid) {
-          <p class="field-error">Enter a specialty (maximum 80 characters).</p>
+        <input id="trainer-specialty" type="text" formControlName="specialty" />
+        @if (trainerForm.controls.specialty.touched && trainerForm.controls.specialty.hasError('required')) {
+          <small>Enter a specialty.</small>
+        }
+        @if (trainerForm.controls.specialty.touched && trainerForm.controls.specialty.hasError('pattern')) {
+          <small>Use letters and numbers only. Spaces, apostrophes, and hyphens are allowed.</small>
         }
 
-        <div class="form-actions">
-          <button class="primary-button" type="submit" [disabled]="isSaving">
-            @if (isSaving) {
-              Saving...
-            } @else if (editingTrainerId === null) {
-              Add trainer
-            } @else {
-              Save changes
-            }
+        <div class="actions">
+          <button type="submit" [disabled]="isSaving">
+            {{ editingTrainerId === null ? 'Add trainer' : 'Save changes' }}
           </button>
-
           @if (editingTrainerId !== null) {
-            <button class="secondary-button" type="button" (click)="cancelEdit()" [disabled]="isSaving">
-              Cancel
-            </button>
+            <button class="secondary" type="button" (click)="cancelEdit()">Cancel</button>
           }
         </div>
       </form>
     </section>
 
-    <section class="list-card">
+    <section class="card">
       <div class="list-header">
-        <div>
-          <p class="section-label">Directory</p>
-          <h2>Current trainers</h2>
-        </div>
-        <button class="text-button" type="button" (click)="loadTrainers()" [disabled]="isLoading">
-          Refresh
-        </button>
+        <h2>Current trainers</h2>
+        <button class="secondary" type="button" (click)="loadTrainers()">Refresh</button>
       </div>
 
       @if (isLoading) {
-        <div class="empty-state">Loading trainers...</div>
+        <p>Loading trainers...</p>
       } @else if (trainers.length === 0) {
-        <div class="empty-state">
-          <strong>No trainers yet.</strong>
-          <span>Use the form to add the first trainer.</span>
-        </div>
+        <p>No trainers yet.</p>
       } @else {
-        <div class="trainer-list">
-          @for (trainer of trainers; track trainer.id; let position = $index) {
-            <article class="trainer-row" [class.is-editing]="editingTrainerId === trainer.id">
-              <span class="row-number">{{ position + 1 }}</span>
-              <div class="trainer-details">
-                <strong>{{ trainer.name }}</strong>
-                <span>{{ trainer.specialty }}</span>
-              </div>
-              <div class="row-actions">
-                <button
-                  class="edit-button"
-                  type="button"
-                  (click)="editTrainer(trainer)"
-                  [disabled]="isSaving || deletingTrainerId === trainer.id"
-                >
-                  Edit
-                </button>
-                <button
-                  class="delete-button"
-                  type="button"
-                  (click)="deleteTrainer(trainer)"
-                  [disabled]="isSaving || deletingTrainerId === trainer.id"
-                >
-                  {{ deletingTrainerId === trainer.id ? 'Deleting...' : 'Delete' }}
-                </button>
-              </div>
-            </article>
-          }
-        </div>
+        @for (trainer of trainers; track trainer.id) {
+          <div class="row">
+            <div>
+              <strong>{{ trainer.name }}</strong>
+              <p>{{ trainer.email }} · {{ trainer.specialty }}</p>
+            </div>
+            <div class="actions">
+              <button class="secondary" type="button" (click)="editTrainer(trainer)">Edit</button>
+              <button class="delete" type="button" (click)="deleteTrainer(trainer)">Delete</button>
+            </div>
+          </div>
+        }
       }
     </section>
   </div>

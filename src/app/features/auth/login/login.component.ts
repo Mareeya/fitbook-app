@@ -1,29 +1,31 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { apiErrorMessage } from '../../../shared/helpers/api-error';
+import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
+  styleUrl: './login.component.scss',
 })
 export class LoginComponent {
-  private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   isLoading = false;
 
-  loginForm = this.formBuilder.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
+  loginForm = new FormGroup({
+    email: new FormControl('', [Validators.required, Validators.email]),
+    password: new FormControl('', [Validators.required]),
   });
 
   login(): void {
-    const email = this.loginForm.controls.email.value.trim();
-    const password = this.loginForm.controls.password.value.trim();
+    const formValue = this.loginForm.value;
+    const email = (formValue.email || '').trim();
+    const password = (formValue.password || '').trim();
     this.loginForm.patchValue({ email, password });
 
     if (this.loginForm.invalid) {
@@ -38,15 +40,16 @@ export class LoginComponent {
       next: (user) => {
         this.authService.saveUser(user);
         this.isLoading = false;
-        this.router.navigate(['/admin/trainers']);
+        this.router.navigate([this.authService.getHomeRoute()]);
       },
       error: (error: HttpErrorResponse) => {
         this.isLoading = false;
         if (error.status === 401) {
           alert('Invalid email or password.');
-        } else {
-          alert('Cannot connect to the backend. Run the API first.');
+          return;
         }
+
+        alert(apiErrorMessage(error, 'Something went wrong. Please try again.'));
       },
     });
   }

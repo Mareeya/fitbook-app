@@ -1,33 +1,57 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f2f1ea;
+  color: #0d0d0d;
+  font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+}
+
 .shell-nav {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px 20px;
   align-items: center;
-  padding: 16px 24px;
+  gap: 22px;
+  padding: 18px 30px;
   border-bottom: 1px solid #dedcd2;
+  background: #fff;
 }
 
 .shell-nav p {
-  margin: 0 12px 0 0;
+  margin: 0;
+  font-size: 0.8125rem;
   font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .shell-nav a {
   color: #0d0d0d99;
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .shell-nav a.active {
   color: #2e7dff;
-  font-weight: 600;
+}
+
+.shell-user {
+  margin-left: auto;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #0d0d0d99;
 }
 
 .shell-nav button {
-  margin-left: auto;
-  padding: 8px 12px;
-  border: 0;
-  background: #2e7dff;
-  color: white;
+  padding: 10px 14px;
+  border: 1px solid #dedcd2;
+  background: #fff;
+  color: #0d0d0d;
+  font: inherit;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   cursor: pointer;
 }

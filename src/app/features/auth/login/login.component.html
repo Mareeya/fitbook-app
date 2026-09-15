@@ -1,13 +1,32 @@
-<form [formGroup]="loginForm" (ngSubmit)="login()">
-  <h1>Admin login</h1>
+<div class="auth-page">
+  <form class="auth-card" [formGroup]="loginForm" (ngSubmit)="login()">
+    <p class="auth-brand">FitBook</p>
+    <h1>Login</h1>
+    <p class="auth-hint">Sign in to continue.</p>
 
-  <label for="email">Email</label>
-  <input id="email" type="email" formControlName="email" />
+    <label for="email">
+      Email
+      <input id="email" type="email" formControlName="email" />
+    </label>
+    @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+      <small>Enter a valid email.</small>
+    }
 
-  <label for="password">Password</label>
-  <input id="password" type="password" formControlName="password" />
+    <label for="password">
+      Password
+      <input id="password" type="password" formControlName="password" />
+    </label>
+    @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+      <small>Enter your password.</small>
+    }
 
-  <button type="submit" [disabled]="isLoading">
-    {{ isLoading ? 'Signing in...' : 'Login' }}
-  </button>
-</form>
+    <button type="submit" [disabled]="isLoading">
+      {{ isLoading ? 'Signing in...' : 'Login' }}
+    </button>
+
+    <p class="auth-hint">
+      New member?
+      <a routerLink="/register">Register</a>
+    </p>
+  </form>
+</div>

@@ -1,1 +1,46 @@
-<p>Register</p>
+<div class="auth-page">
+  <form class="auth-card" [formGroup]="registerForm" (ngSubmit)="register()">
+    <p class="auth-brand">FitBook</p>
+    <h1>Register</h1>
+    <p class="auth-hint">Create a member account to continue.</p>
+
+    <label for="name">
+      Name
+      <input id="name" type="text" formControlName="name" />
+    </label>
+    @if (registerForm.controls.name.touched && registerForm.controls.name.hasError('required')) {
+      <small>Enter your name.</small>
+    }
+    @if (registerForm.controls.name.touched && registerForm.controls.name.hasError('pattern')) {
+      <small>Use letters only. Spaces, apostrophes, and hyphens are allowed.</small>
+    }
+
+    <label for="email">
+      Email
+      <input id="email" type="email" formControlName="email" />
+    </label>
+    @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+      <small>Enter a valid email.</small>
+    }
+
+    <label for="password">
+      Password
+      <input id="password" type="password" formControlName="password" />
+    </label>
+    @if (registerForm.controls.password.touched && registerForm.controls.password.hasError('required')) {
+      <small>Enter a password.</small>
+    }
+    @if (registerForm.controls.password.touched && registerForm.controls.password.hasError('pattern')) {
+      <small>Password must be at least 8 characters with no spaces.</small>
+    }
+
+    <button type="submit" [disabled]="isLoading">
+      {{ isLoading ? 'Creating account...' : 'Register' }}
+    </button>
+
+    <p class="auth-hint">
+      Already have an account?
+      <a routerLink="/login">Login</a>
+    </p>
+  </form>
+</div>
