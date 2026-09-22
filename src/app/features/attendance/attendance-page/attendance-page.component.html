@@ -1,0 +1,100 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Trainer · Session roster</p>
+      <h1>{{ roster?.session?.className || 'Session' }}</h1>
+      @if (roster) {
+        <p class="page-subtitle">
+          {{ roster.session.trainerName }} · {{ whenLabel() }} · update status, then save attendance
+        </p>
+      }
+    </div>
+    <a mat-stroked-button [routerLink]="backLink">Back to sessions</a>
+  </header>
+
+  @if (isLoading) {
+    <div class="state-panel" role="status">
+      <mat-spinner diameter="32"></mat-spinner>
+      <p>Loading roster…</p>
+    </div>
+  } @else if (loadError) {
+    <div class="state-panel error" role="alert">
+      <p>{{ loadError }}</p>
+      <button mat-stroked-button type="button" (click)="loadRoster()">Retry</button>
+    </div>
+  } @else if (roster) {
+    <mat-card appearance="outlined" class="form-panel table-panel roster-panel">
+      <p class="meta">
+        {{ roster.entries.length }} on roster · {{ roster.session.checkedInCount }} checked in
+        @if (!canMarkAttendance()) {
+          · Marking opens at session start ({{ whenLabel() }})
+        }
+      </p>
+
+      @if (roster.entries.length === 0) {
+        <p class="empty-copy">No bookings yet for this session.</p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="roster.entries" class="roster-table">
+            <ng-container matColumnDef="memberName">
+              <th mat-header-cell *matHeaderCellDef>Member</th>
+              <td mat-cell *matCellDef="let row">{{ row.memberName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef>Email</th>
+              <td mat-cell *matCellDef="let row">{{ row.email }}</td>
+            </ng-container>
+            <ng-container matColumnDef="bookingStatus">
+              <th mat-header-cell *matHeaderCellDef>Booking</th>
+              <td mat-cell *matCellDef="let row">{{ row.bookingStatus }}</td>
+            </ng-container>
+            <ng-container matColumnDef="attendanceStatus">
+              <th mat-header-cell *matHeaderCellDef>Current</th>
+              <td mat-cell *matCellDef="let row">{{ row.attendanceStatus }}</td>
+            </ng-container>
+            <ng-container matColumnDef="mark">
+              <th mat-header-cell *matHeaderCellDef>Mark</th>
+              <td mat-cell *matCellDef="let row">
+                @if (row.bookingStatus.toLowerCase() === 'cancelled') {
+                  <span class="muted">—</span>
+                } @else if (!canMarkAttendance()) {
+                  <span class="muted">Not yet</span>
+                } @else if (rowForms.has(row.bookingId)) {
+                  <mat-form-field
+                    appearance="outline"
+                    class="mark-field"
+                    subscriptSizing="dynamic"
+                    [formGroup]="rowForm(row)"
+                  >
+                    <select matNativeControl formControlName="status" aria-label="Attendance status">
+                      @for (option of statusOptions; track option) {
+                        <option [ngValue]="option">{{ statusLabels[option] }}</option>
+                      }
+                    </select>
+                  </mat-form-field>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+
+        <div class="actions">
+          <button
+            mat-flat-button
+            color="primary"
+            type="button"
+            (click)="saveAttendance()"
+            [disabled]="isSaving || !canMarkAttendance()"
+          >
+            @if (isSaving) {
+              <mat-spinner diameter="18"></mat-spinner>
+            }
+            Save attendance
+          </button>
+        </div>
+      }
+    </mat-card>
+  }
+</div>

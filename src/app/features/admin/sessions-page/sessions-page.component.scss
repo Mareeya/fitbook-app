@@ -1,0 +1,113 @@
+/* Page-specific only; shared rules in src/styles/fitbook-shared.scss */
+
+.schedule-mode-wrap {
+  margin: var(--space-2) 0 var(--space-3);
+}
+
+.schedule-mode-label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.schedule-mode-segment {
+  display: flex !important;
+  flex-direction: column;
+  width: 100%;
+  gap: var(--space-2);
+  padding: 0;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent;
+  box-shadow: none !important;
+}
+
+.schedule-mode-segment .mat-button-toggle {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+}
+
+@media (min-width: 768px) {
+  .schedule-mode-segment {
+    flex-direction: row !important;
+  }
+
+  .schedule-mode-segment .mat-button-toggle {
+    flex: 1 1 50%;
+    width: auto;
+  }
+}
+
+.schedule-mode-segment .mat-button-toggle-button {
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  line-height: 1.25;
+}
+
+.schedule-mode-segment .mat-button-toggle-checked {
+  border-color: var(--primary) !important;
+  background: color-mix(in srgb, var(--primary-soft) 55%, var(--surface)) !important;
+  box-shadow: none;
+
+  .segment-title { color: var(--primary-dark); }
+  mat-icon { color: var(--primary); }
+}
+
+.segment-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 12px;
+  min-height: 44px;
+  box-sizing: border-box;
+  text-align: left;
+  gap: 8px;
+  width: 100%;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    flex-shrink: 0;
+    color: var(--muted);
+  }
+}
+
+.segment-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.segment-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.segment-hint {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--muted);
+}
+
+.sessions-table {
+  min-width: 640px;
+}
+
+.page .state {
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+}

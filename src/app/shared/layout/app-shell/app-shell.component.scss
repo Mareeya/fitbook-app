@@ -1,57 +1,186 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: #f2f1ea;
-  color: #0d0d0d;
-  font-family: Inter, "Helvetica Neue", Arial, sans-serif;
+  background: var(--background);
+  color: var(--text);
 }
 
-.shell-nav {
+.shell-container {
+  min-height: 100vh;
+  background: var(--background);
+}
+
+.shell-sidebar {
+  width: var(--sidebar-width);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) var(--space-1);
+}
+
+/* Side mode: stay visible; do not shrink away on content click */
+:host ::ng-deep .mat-drawer-side {
+  border-right: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.sidebar-brand {
+  padding: var(--space-1) var(--space-1) var(--space-3);
+}
+
+.brand {
   display: flex;
   align-items: center;
-  gap: 22px;
-  padding: 18px 30px;
-  border-bottom: 1px solid #dedcd2;
-  background: #fff;
-}
-
-.shell-nav p {
-  margin: 0;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.shell-nav a {
-  color: #0d0d0d99;
+  gap: 12px;
   text-decoration: none;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 1.125rem;
 }
 
-.shell-nav a.active {
-  color: #2e7dff;
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+  color: var(--primary);
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.brand-text {
+  letter-spacing: -0.02em;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  padding: 0 4px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: inherit;
+  }
+
+  &:hover:not(.active) {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+  }
+
+  &.active {
+    color: var(--primary-dark);
+    border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    background: var(--primary-soft);
+    font-weight: 600;
+
+    mat-icon {
+      color: var(--primary);
+    }
+  }
+}
+
+.nav-button {
+  border: none;
+}
+
+.sidebar-footer {
+  padding: var(--space-2) 4px 0;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--space-2);
+}
+
+.shell-content {
+  background: var(--background);
+}
+
+.shell-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 64px;
+  padding: 0 var(--space-3);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.topbar-spacer {
+  flex: 1;
 }
 
 .shell-user {
-  margin-left: auto;
+  max-width: 12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #0d0d0d99;
+  color: var(--muted);
 }
 
-.shell-nav button {
-  padding: 10px 14px;
-  border: 1px solid #dedcd2;
-  background: #fff;
-  color: #0d0d0d;
-  font: inherit;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
+.topbar-logout {
+  display: none;
+}
+
+.topbar-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.shell-main {
+  min-width: 0;
+  min-height: calc(100vh - 64px);
+}
+
+@media (min-width: 768px) {
+  .topbar-logout {
+    display: inline-flex;
+  }
+
+  .shell-container {
+    --mat-sidenav-content-margin: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .shell-sidebar {
+    width: min(280px, 88vw);
+  }
 }

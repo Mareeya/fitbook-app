@@ -1,59 +1,133 @@
-<main class="dash">
-  <section class="frame">
-    <header class="top">
-      <div>
-        <p class="label">FitBook · Trainer</p>
-        <p class="who">{{ greeting }}, {{ firstName }}</p>
-      </div>
-      <p class="label">{{ todayLabel }}</p>
-    </header>
-
-    <div class="stats">
-      <div class="stat">
-        <p class="label">Sessions today</p>
-        <p class="fig">3</p>
-        <p class="note">On the floor today</p>
-      </div>
-      <div class="stat">
-        <p class="label">Total members</p>
-        <p class="fig">47</p>
-        <p class="note">Across your classes</p>
-      </div>
+<div class="overview">
+  <header class="overview-header">
+    <div>
+      <p class="eyebrow">Trainer</p>
+      <h1>Overview</h1>
+      <p class="subtitle">{{ greeting }}, {{ firstName }} · {{ todayLabel }}</p>
     </div>
+    <a mat-stroked-button routerLink="/trainer/sessions">All sessions</a>
+  </header>
 
-    <div class="sec-head">
-      <p class="label">My classes</p>
-      <p class="label">{{ classes.length }} assigned</p>
+  @if (isLoading) {
+    <div class="state-panel" role="status">
+      <mat-spinner diameter="32"></mat-spinner>
+      <p>Loading overview…</p>
     </div>
+  } @else if (loadError) {
+    <div class="state-panel error" role="alert">
+      <p>{{ loadError }}</p>
+      <button mat-stroked-button type="button" (click)="loadOverview()">Retry</button>
+    </div>
+  } @else {
+    <section class="kpi-grid" aria-label="Your metrics">
+      <article class="kpi-card kpi-green">
+        <div class="kpi-icon" aria-hidden="true"><mat-icon>class</mat-icon></div>
+        <p class="kpi-label">Assigned classes</p>
+        <p class="kpi-value">{{ assignedCount }}</p>
+        <p class="kpi-meta">Templates linked to you</p>
+      </article>
+      <article class="kpi-card kpi-mint">
+        <div class="kpi-icon" aria-hidden="true"><mat-icon>event</mat-icon></div>
+        <p class="kpi-label">Sessions this month</p>
+        <p class="kpi-value">{{ sessionsThisMonth }}</p>
+        <p class="kpi-meta">Across your classes</p>
+      </article>
+      <article class="kpi-card kpi-sky">
+        <div class="kpi-icon" aria-hidden="true"><mat-icon>pie_chart</mat-icon></div>
+        <p class="kpi-label">Average fill</p>
+        <p class="kpi-value">{{ averageFillRate }}%</p>
+        <p class="kpi-meta">Based on classes with sessions</p>
+      </article>
+      <article class="kpi-card kpi-sand">
+        <div class="kpi-icon" aria-hidden="true"><mat-icon>today</mat-icon></div>
+        <p class="kpi-label">Today</p>
+        <p class="kpi-value">{{ todaySessions.length }}</p>
+        <p class="kpi-meta">Sessions scheduled today</p>
+      </article>
+    </section>
 
-    @if (isLoading) {
-      <p class="empty">Loading classes...</p>
-    } @else if (classes.length === 0) {
-      <p class="empty">No classes are assigned to you yet.</p>
-    } @else {
-      <div class="rows">
-        @for (gymClass of classes; track gymClass.id) {
-          <article class="row">
-            <div>
-              <p class="row-name">{{ gymClass.name }}</p>
-              <p class="row-meta">{{ gymClass.categoryName }} · {{ gymClass.initCapacity }} seats</p>
-            </div>
-            <div class="bar">
-              <div class="bar-track">
-                <div class="bar-fill" [style.width.%]="gymClass.averageFillRate"></div>
-              </div>
-              <p class="bar-cap">
-                @if (gymClass.sessionsThisMonth === 0) {
-                  No sessions yet
-                } @else {
-                  {{ gymClass.averageFillRate }}% avg fill
-                }
-              </p>
-            </div>
-            <p class="row-stat">{{ gymClass.sessionsThisMonth }} this month</p>
-          </article>
-        }
-      </div>
-    }
-  </section>
-</main>
+    <div class="dashboard-grid">
+      <mat-card class="panel today-panel" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Today&apos;s sessions</mat-card-title>
+          <mat-card-subtitle>Open roster and save attendance</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (todaySessions.length === 0) {
+            <p class="empty-copy">No sessions scheduled for today.</p>
+          } @else {
+            <ul class="session-list">
+              @for (session of todaySessions; track session.id) {
+                <li class="session-row">
+                  <div class="session-main">
+                    <p class="session-title">{{ session.className }}</p>
+                    <p class="session-meta">
+                      {{ session.startAt | date: 'shortTime' }} · {{ session.seatsTaken }}/{{ session.capacity }}
+                      booked · {{ session.checkedInCount }} checked in
+                    </p>
+                    <div class="progress-wrap">
+                      <div class="progress-track">
+                        <div
+                          class="progress-fill"
+                          [class.is-warn]="isSessionLowFill(session)"
+                          [class.is-full]="isSessionFull(session)"
+                          [style.width.%]="fillRate(session)"
+                        ></div>
+                      </div>
+                      <span class="progress-label">{{ fillRate(session) }}% capacity</span>
+                    </div>
+                  </div>
+                  <a
+                    mat-flat-button
+                    color="primary"
+                    [routerLink]="['/trainer/sessions', session.id, 'roster']"
+                  >
+                    Roster
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="panel classes-panel" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>My classes</mat-card-title>
+          <mat-card-subtitle>{{ classes.length }} assigned</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (classes.length === 0) {
+            <p class="empty-copy">No classes are assigned to you yet.</p>
+          } @else {
+            <ul class="class-list">
+              @for (gymClass of classes; track gymClass.id) {
+                <li class="class-row">
+                  <div>
+                    <p class="class-name">{{ gymClass.name }}</p>
+                    <p class="class-meta">
+                      {{ gymClass.categoryName }} · {{ gymClass.initCapacity }} seats ·
+                      {{ gymClass.sessionsThisMonth }} this month
+                    </p>
+                  </div>
+                  <div class="progress-wrap wide">
+                    <div class="progress-track">
+                      <div class="progress-fill" [style.width.%]="gymClass.averageFillRate"></div>
+                    </div>
+                    <span class="progress-label">
+                      @if (gymClass.sessionsThisMonth === 0) {
+                        No sessions yet
+                      } @else {
+                        {{ gymClass.averageFillRate }}% avg fill
+                      }
+                    </span>
+                  </div>
+                </li>
+              }
+            </ul>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</div>

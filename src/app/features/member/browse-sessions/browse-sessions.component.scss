@@ -1,0 +1,223 @@
+:host {
+  display: block;
+}
+
+.member-page {
+  max-width: 920px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-2) var(--space-4);
+}
+
+.bookings-link {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+.filter-bar-card {
+  margin-bottom: var(--space-3);
+}
+
+.results-line {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.session-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 720px) {
+  .session-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.session-card {
+  height: 100%;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color 0.15s ease;
+}
+
+.session-card.is-booked {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+}
+
+.session-card.is-unavailable:not(.is-booked) {
+  opacity: 0.92;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.when-block {
+  min-width: 0;
+}
+
+.date {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.time {
+  margin: 2px 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.status-chip {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--muted) 18%, transparent);
+  color: var(--text, inherit);
+}
+
+.status-booked {
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  color: var(--primary);
+}
+
+.status-full,
+.status-past {
+  background: color-mix(in srgb, var(--warning, #b45309) 15%, transparent);
+}
+
+.class-name {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.meta mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.dot {
+  opacity: 0.5;
+}
+
+.seats-meter {
+  margin-top: auto;
+}
+
+.meter-track {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 0.2s ease;
+}
+
+.meter-fill.meter-warn {
+  background: var(--warning, #b45309);
+}
+
+.meter-label {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.card-actions {
+  display: flex;
+}
+
+.card-actions button {
+  width: 100%;
+  min-height: 44px;
+}
+
+.action-booked {
+  opacity: 1;
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+
+.state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+}
+
+.state-panel p {
+  margin: 0;
+}
+
+.state-panel .hint {
+  font-size: 0.875rem;
+}
+
+.state-panel.error {
+  color: var(--error);
+  border-style: solid;
+}
+
+mat-paginator {
+  margin-top: 8px;
+  background: transparent;
+}

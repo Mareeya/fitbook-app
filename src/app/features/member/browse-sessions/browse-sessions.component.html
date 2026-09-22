@@ -1,0 +1,163 @@
+<div class="member-page page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Hi {{ firstName }}</p>
+      <h1>Book a class</h1>
+      <p class="page-subtitle">Choose a session below. You can book each class time once.</p>
+    </div>
+    <a mat-flat-button color="primary" class="bookings-link" routerLink="/home/bookings">
+      <mat-icon aria-hidden="true">event_available</mat-icon>
+      My bookings
+      @if (upcomingBookingsCount > 0) {
+        <span class="count-badge" aria-label="{{ upcomingBookingsCount }} upcoming">{{ upcomingBookingsCount }}</span>
+      }
+    </a>
+  </header>
+
+  <mat-card class="form-panel filter-bar-card" appearance="outlined" aria-label="Find sessions">
+    <div class="filter-bar-scroll">
+    <form class="filter-bar" [formGroup]="dateRangeForm" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field">
+        <mat-label>From</mat-label>
+        <input matInput [matDatepicker]="browseFromPicker" formControlName="fromDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="browseFromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #browseFromPicker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field">
+        <mat-label>To</mat-label>
+        <input matInput [matDatepicker]="browseToPicker" formControlName="toDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="browseToPicker"></mat-datepicker-toggle>
+        <mat-datepicker #browseToPicker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field filter-field--search">
+        <mat-label>Search</mat-label>
+        <input matInput [formControl]="searchControl" />
+        <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      </mat-form-field>
+      <button mat-flat-button color="primary" type="submit" class="filter-apply">Apply</button>
+    </form>
+    </div>
+  </mat-card>
+
+  @if (isLoading) {
+    <div class="state-panel" role="status" aria-live="polite">
+      <mat-spinner diameter="32"></mat-spinner>
+      <p>Loading sessions…</p>
+    </div>
+  } @else if (loadError) {
+    <div class="state-panel error" role="alert">
+      <mat-icon aria-hidden="true">error_outline</mat-icon>
+      <p>{{ loadError }}</p>
+      <button mat-stroked-button type="button" (click)="loadSessions()">Try again</button>
+    </div>
+  } @else if (filteredSessions.length === 0) {
+    <div class="state-panel">
+      <mat-icon aria-hidden="true">event_busy</mat-icon>
+      <p>No sessions match your dates or search.</p>
+      <p class="hint">Try widening the date range or clearing the search.</p>
+    </div>
+  } @else {
+    <p class="results-line" aria-live="polite">
+      Showing {{ filteredSessions.length }} session{{ filteredSessions.length === 1 ? '' : 's' }}
+    </p>
+
+    <ul class="session-list">
+      @for (session of filteredSessions; track session.id) {
+        <li>
+          <mat-card
+            appearance="outlined"
+            class="session-card"
+            [class.is-booked]="availability(session) === 'booked'"
+            [class.is-unavailable]="availability(session) === 'full' || availability(session) === 'past'"
+          >
+            <div class="card-top">
+              <div class="when-block">
+                <p class="date">{{ labels(session).dateLabel }}</p>
+                <p class="time">{{ labels(session).timeLabel }}</p>
+              </div>
+              <span
+                class="status-chip"
+                [class.status-booked]="availability(session) === 'booked'"
+                [class.status-full]="availability(session) === 'full'"
+                [class.status-past]="availability(session) === 'past'"
+              >
+                {{ statusLabel(session) }}
+              </span>
+            </div>
+
+            <h2 class="class-name">{{ session.className }}</h2>
+            <p class="meta">
+              <mat-icon aria-hidden="true">person</mat-icon>
+              {{ session.trainerName }}
+              <span class="dot" aria-hidden="true">·</span>
+              {{ session.categoryName }}
+            </p>
+
+            <div
+              class="seats-meter"
+              role="meter"
+              [attr.aria-valuenow]="session.seatsTaken"
+              [attr.aria-valuemin]="0"
+              [attr.aria-valuemax]="session.capacity"
+              [attr.aria-label]="session.seatsLeft + ' seats left out of ' + session.capacity"
+            >
+              <div class="meter-track">
+                <div
+                  class="meter-fill"
+                  [class.meter-warn]="fillPercent(session) >= 85"
+                  [style.width.%]="fillPercent(session)"
+                ></div>
+              </div>
+              <p class="meter-label">
+                {{ session.seatsLeft }} seat{{ session.seatsLeft === 1 ? '' : 's' }} left
+                <span class="muted">({{ session.seatsTaken }}/{{ session.capacity }} booked)</span>
+              </p>
+            </div>
+
+            <div class="card-actions">
+              @switch (availability(session)) {
+                @case ('booked') {
+                  <button mat-stroked-button type="button" class="action-booked" disabled>
+                    <mat-icon aria-hidden="true">check_circle</mat-icon>
+                    Booked
+                  </button>
+                }
+                @case ('full') {
+                  <button mat-stroked-button type="button" disabled>Full</button>
+                }
+                @case ('past') {
+                  <button mat-stroked-button type="button" disabled>Started</button>
+                }
+                @default {
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    type="button"
+                    [disabled]="bookingSessionId !== null"
+                    (click)="bookSession(session)"
+                  >
+                    @if (isBookingSession(session.id)) {
+                      <mat-spinner diameter="18"></mat-spinner>
+                      Booking…
+                    } @else {
+                      Book this session
+                    }
+                  </button>
+                }
+              }
+            </div>
+          </mat-card>
+        </li>
+      }
+    </ul>
+
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[6, 12, 24]"
+      (page)="onPage($event)"
+      aria-label="Session pages"
+    ></mat-paginator>
+  }
+</div>

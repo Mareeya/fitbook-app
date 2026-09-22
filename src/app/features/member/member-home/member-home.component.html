@@ -1,5 +1,219 @@
-<section class="role-page">
-  <h1>Member home</h1>
-  <p>Welcome, {{ user?.name }}.</p>
-  <p class="hint">You are signed in as a member. Class schedule and bookings will show here next.</p>
-</section>
+<div class="home">
+  <section class="frame">
+    <header class="top">
+      <div>
+        <p class="label">FitBook · {{ roleLabel() }}</p>
+        <h1>{{ displayName }}</h1>
+      </div>
+      <p class="label">{{ todayLabel }} · {{ bookedThisWeek }} classes booked this week</p>
+    </header>
+
+    @if (isLoading) {
+      <div class="state" role="status">
+        <mat-spinner diameter="28"></mat-spinner>
+        <p>Loading your week...</p>
+      </div>
+    } @else if (loadError) {
+      <div class="state error" role="alert">
+        <p>{{ loadError }}</p>
+        <button mat-stroked-button type="button" (click)="retry()">Retry</button>
+      </div>
+    } @else {
+      @if (nextBooking; as next) {
+        <section class="hero" aria-labelledby="next-class-title">
+          <div>
+            <p class="hero-label">Your next class · {{ next.studio }}</p>
+            <h2 id="next-class-title" class="hero-name">{{ next.name }}</h2>
+            <p class="hero-sub">{{ next.coach }} · {{ next.timeLabel }}</p>
+          </div>
+          <div class="hero-right">
+            <div class="hero-count">
+              <p class="hero-label">Starts</p>
+              <p class="hero-time">{{ next.timeLabel }}</p>
+            </div>
+            <button mat-flat-button type="button" class="hero-btn" (click)="viewBooking(next)">
+              View booking
+            </button>
+          </div>
+        </section>
+      } @else {
+        <div class="state" role="status">
+          <mat-icon aria-hidden="true">event_busy</mat-icon>
+          <p>No upcoming class. Book a session when spots are open.</p>
+        </div>
+      }
+
+      <div class="sec-head">
+        <h2 class="label">My week</h2>
+        <p class="label">All bookings</p>
+      </div>
+
+      @if (bookings.length === 0) {
+        <p class="state">No bookings yet.</p>
+      } @else {
+        <ul class="rows">
+          @for (booking of bookings; track booking.id) {
+            <li
+              class="row"
+              [class.is-done]="booking.status === 'cancelled'"
+              [class.is-live]="booking.status === 'booked'"
+            >
+              <p class="row-when">
+                {{ booking.dateLabel }}
+                <span>{{ booking.timeLabel }}</span>
+              </p>
+              <div>
+                <p class="row-name">{{ booking.name }}</p>
+                <p class="row-coach">
+                  {{ booking.coach }}
+                  @if (booking.studio) {
+                    · {{ booking.studio }}
+                  }
+                </p>
+              </div>
+              <p class="chip" [class.chip-live]="booking.status === 'booked'" [class.chip-off]="booking.status !== 'booked'">
+                {{ statusLabel(booking.status) }}
+              </p>
+              @if (booking.status === 'booked') {
+                <button class="row-action" type="button" (click)="cancelBooking(booking)">Cancel</button>
+              } @else {
+                <span class="row-action is-muted">{{ booking.status === 'attended' ? 'Book again' : '—' }}</span>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="sec-head month-head">
+        <h2 class="label">Your month</h2>
+        <p class="label">Layout preview</p>
+      </div>
+
+      <section class="charts" aria-label="Your month">
+        <article class="chart">
+          <p class="label">Attendance rate</p>
+          <p class="chart-note">{{ attendanceNote }}</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" [attr.aria-label]="'Attendance rate ' + attendanceRate + ' percent'">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155" fill="none"></circle>
+                <circle
+                  cx="21"
+                  cy="21"
+                  r="15.9155"
+                  fill="none"
+                  stroke="var(--primary)"
+                  [attr.stroke-dasharray]="attendanceRate + ' ' + (100 - attendanceRate)"
+                ></circle>
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">{{ attendanceRate }}%</p>
+              <p class="cap">6 of 8</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="chart">
+          <p class="label">What you book</p>
+          <p class="chart-note">Split of your bookings by category</p>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" aria-label="Bookings by class category">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155" fill="none"></circle>
+                @for (slice of categorySlices; track slice.label) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.9155"
+                    fill="none"
+                    [attr.stroke]="slice.color"
+                    [attr.stroke-dasharray]="slice.dasharray"
+                    [attr.stroke-dashoffset]="-slice.offset"
+                  ></circle>
+                }
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="fig">{{ categoryTotal }}</p>
+              <p class="cap">Bookings</p>
+            </div>
+          </div>
+          <div class="legend">
+            @for (slice of categorySlices; track slice.label) {
+              <div class="legend-row">
+                <span class="key" [style.background]="slice.color"></span>
+                <span class="nm">{{ slice.label }}</span>
+                <span class="v">{{ slice.value }}</span>
+              </div>
+            }
+          </div>
+        </article>
+
+        <article class="chart">
+          <p class="label">Classes per week</p>
+          <p class="chart-note">Last six weeks · goal is 3</p>
+          <div class="colchart">
+            @for (bar of weekBars; track bar.label) {
+              <div class="col">
+                <div class="col-stack">
+                  <div class="col-fill" [class.is-peak]="bar.isPeak" [style.height.%]="bar.heightPct"></div>
+                </div>
+                <p class="col-val">{{ bar.value }}</p>
+                <p class="col-lab">{{ bar.label }}</p>
+              </div>
+            }
+          </div>
+        </article>
+      </section>
+
+      <div class="sec-head">
+        <h2 class="label">Spots still open today</h2>
+        <p class="label">Full schedule</p>
+      </div>
+
+      <section class="cards" aria-label="Open spots">
+        @for (spot of openSpots; track spot.id) {
+          <article class="mini">
+            <div>
+              <div class="mini-top">
+                <p class="mini-time">{{ spot.timeLabel }}</p>
+                <span
+                  class="chip"
+                  [class.chip-warn]="spot.status === 'almost'"
+                  [class.chip-open]="spot.status === 'open'"
+                >
+                  {{ spot.status === 'open' ? 'Open' : 'Almost full' }}
+                </span>
+              </div>
+              <h3 class="mini-name">{{ spot.name }}</h3>
+              <p class="mini-coach">{{ spot.coach }} · {{ spot.duration }}</p>
+            </div>
+            <div
+              class="bar"
+              role="meter"
+              [attr.aria-label]="spot.name + ' ' + remaining(spot) + ' spots left'"
+              aria-valuemin="0"
+              [attr.aria-valuemax]="spot.capacity"
+              [attr.aria-valuenow]="spot.taken"
+            >
+              <div class="bar-track">
+                <div class="bar-fill" [class.warn]="spot.status !== 'open'" [style.width.%]="fillPercent(spot)"></div>
+              </div>
+              <p class="bar-cap">{{ spot.taken }} / {{ spot.capacity }} · {{ remaining(spot) }} left</p>
+            </div>
+            <button
+              mat-stroked-button
+              type="button"
+              class="spot-btn"
+              [disabled]="spot.alreadyBooked"
+              (click)="bookSpot(spot)"
+            >
+              {{ spot.alreadyBooked ? 'Already booked' : 'Book' }}
+            </button>
+          </article>
+        }
+      </section>
+    }
+  </section>
+</div>

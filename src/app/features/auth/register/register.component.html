@@ -1,41 +1,70 @@
-<div class="auth-page">
-  <form class="auth-card" [formGroup]="registerForm" (ngSubmit)="register()">
-    <p class="auth-brand">FitBook</p>
+<main class="auth-page">
+  <form mat-card class="auth-card" [formGroup]="registerForm" (ngSubmit)="register()" novalidate>
+    <p class="auth-brand">
+      <span class="brand-fit">Fit</span><span class="brand-book">Book</span>
+    </p>
     <h1>Register</h1>
     <p class="auth-hint">Create a member account to continue.</p>
 
-    <label for="name">
-      Name
-      <input id="name" type="text" formControlName="name" />
-    </label>
-    @if (registerForm.controls.name.touched && registerForm.controls.name.hasError('required')) {
-      <small>Enter your name.</small>
-    }
-    @if (registerForm.controls.name.touched && registerForm.controls.name.hasError('pattern')) {
-      <small>Use letters only. Spaces, apostrophes, and hyphens are allowed.</small>
-    }
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input matInput id="name" type="text" formControlName="name" autocomplete="name" />
+      @if (registerForm.controls.name.touched && registerForm.controls.name.hasError('required')) {
+        <mat-error>Enter your name.</mat-error>
+      }
+      @if (registerForm.controls.name.touched && registerForm.controls.name.hasError('pattern')) {
+        <mat-error>Use letters only. Spaces, apostrophes, and hyphens are allowed.</mat-error>
+      }
+    </mat-form-field>
 
-    <label for="email">
-      Email
-      <input id="email" type="email" formControlName="email" />
-    </label>
-    @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
-      <small>Enter a valid email.</small>
-    }
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput id="email" type="email" formControlName="email" autocomplete="email" />
+      @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+        <mat-error>Enter a valid email.</mat-error>
+      }
+    </mat-form-field>
 
-    <label for="password">
-      Password
-      <input id="password" type="password" formControlName="password" />
-    </label>
-    @if (registerForm.controls.password.touched && registerForm.controls.password.hasError('required')) {
-      <small>Enter a password.</small>
-    }
-    @if (registerForm.controls.password.touched && registerForm.controls.password.hasError('pattern')) {
-      <small>Password must be at least 8 characters with no spaces.</small>
-    }
+    <mat-form-field appearance="outline">
+      <mat-label>Password</mat-label>
+      <input
+        matInput
+        id="password"
+        [type]="hidePassword ? 'password' : 'text'"
+        formControlName="password"
+        autocomplete="new-password"
+        [attr.aria-invalid]="registerForm.controls.password.touched && registerForm.controls.password.invalid"
+      />
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="hidePassword = !hidePassword"
+        [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'"
+      >
+        <mat-icon>{{ hidePassword ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+      @if (registerForm.controls.password.touched && registerForm.controls.password.hasError('required')) {
+        <mat-error>Enter a password.</mat-error>
+      }
+      @if (registerForm.controls.password.touched && registerForm.controls.password.hasError('pattern')) {
+        <mat-error>Password must be at least 8 characters with no spaces.</mat-error>
+      }
+    </mat-form-field>
 
-    <button type="submit" [disabled]="isLoading">
-      {{ isLoading ? 'Creating account...' : 'Register' }}
+    <button
+      mat-flat-button
+      color="primary"
+      type="submit"
+      [disabled]="isLoading"
+      [attr.aria-busy]="isLoading"
+    >
+      @if (isLoading) {
+        <mat-spinner diameter="18"></mat-spinner>
+        Creating account...
+      } @else {
+        Register
+      }
     </button>
 
     <p class="auth-hint">
@@ -43,4 +72,4 @@
       <a routerLink="/login">Login</a>
     </p>
   </form>
-</div>
+</main>

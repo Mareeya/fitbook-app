@@ -1,16 +1,107 @@
-<nav class="shell-nav">
-  <p>FitBook</p>
-  @if (isAdmin()) {
-    <a routerLink="/admin/trainers" routerLinkActive="active">Trainers</a>
-    <a routerLink="/admin/classes" routerLinkActive="active">Classes</a>
-  }
-  @if (isTrainer()) {
-    <a routerLink="/trainer" routerLinkActive="active">My Classes</a>
-  }
-  @if (isMember()) {
-    <a routerLink="/home" routerLinkActive="active">Home</a>
-  }
-  <span class="shell-user">{{ userName() }}</span>
-  <button type="button" (click)="logout()">Logout</button>
-</nav>
-<router-outlet />
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav
+    #drawer
+    class="shell-sidebar"
+    [mode]="isOverlayNav() ? 'over' : 'side'"
+    [opened]="!isOverlayNav()"
+    [disableClose]="!isOverlayNav()"
+    [fixedInViewport]="!isOverlayNav()"
+    [autoFocus]="false"
+    position="start"
+  >
+    <div class="sidebar-brand">
+      <a [routerLink]="homeLink()" class="brand" aria-label="FitBook home">
+        <span class="brand-mark" aria-hidden="true">
+          <mat-icon>fitness_center</mat-icon>
+        </span>
+        <span class="brand-text"><span class="brand-fit">Fit</span><span class="brand-book">Book</span></span>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Main">
+      @if (canManage()) {
+        <a class="nav-item" routerLink="/admin/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <mat-icon>dashboard</mat-icon>
+          <span>Dashboard</span>
+        </a>
+        <a class="nav-item" routerLink="/admin/trainers" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <mat-icon>groups</mat-icon>
+          <span>Trainers</span>
+        </a>
+        <a class="nav-item" routerLink="/admin/classes" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <mat-icon>category</mat-icon>
+          <span>Classes</span>
+        </a>
+        <a class="nav-item" routerLink="/admin/sessions" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <mat-icon>event</mat-icon>
+          <span>Sessions</span>
+        </a>
+      }
+      @if (isTrainer()) {
+        <a
+          class="nav-item"
+          routerLink="/trainer"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="exactActiveLink"
+          ariaCurrentWhenActive="page"
+        >
+          <mat-icon>dashboard</mat-icon>
+          <span>Overview</span>
+        </a>
+        <a class="nav-item" routerLink="/trainer/sessions" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <mat-icon>event_note</mat-icon>
+          <span>Sessions</span>
+        </a>
+      }
+      @if (isMember()) {
+        <a
+          class="nav-item"
+          routerLink="/home"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="exactActiveLink"
+          ariaCurrentWhenActive="page"
+        >
+          <mat-icon>search</mat-icon>
+          <span>Book a class</span>
+        </a>
+        <a class="nav-item" routerLink="/home/bookings" routerLinkActive="active" ariaCurrentWhenActive="page">
+          <mat-icon>event_available</mat-icon>
+          <span>My bookings</span>
+        </a>
+      }
+    </nav>
+
+    @if (isOverlayNav()) {
+      <div class="sidebar-footer">
+        <button class="nav-item nav-button" type="button" (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Logout</span>
+        </button>
+      </div>
+    }
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content">
+    <header class="shell-topbar">
+      @if (isOverlayNav()) {
+        <button mat-icon-button type="button" (click)="drawer.toggle()" aria-label="Open navigation menu">
+          <mat-icon>menu</mat-icon>
+        </button>
+      }
+      <div class="topbar-spacer"></div>
+      <span class="shell-user">{{ currentUser()?.name }}</span>
+      <button mat-stroked-button type="button" class="topbar-logout" (click)="logout()">
+        Logout
+      </button>
+      @if (isNavigating()) {
+        <mat-progress-bar class="topbar-progress" mode="indeterminate" aria-label="Loading page"></mat-progress-bar>
+      }
+    </header>
+
+    <main id="main-content" class="shell-main" tabindex="-1">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

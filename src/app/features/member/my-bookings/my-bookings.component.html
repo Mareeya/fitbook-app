@@ -1,0 +1,73 @@
+<div class="member-page">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">FitBook · Member</p>
+      <h1>My bookings</h1>
+      <p class="page-subtitle">Upcoming and past classes you have reserved.</p>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/home">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      Book another class
+    </a>
+  </header>
+
+  @if (isLoading) {
+    <div class="state-panel" role="status">
+      <mat-spinner diameter="32"></mat-spinner>
+      <p>Loading your bookings…</p>
+    </div>
+  } @else if (loadError) {
+    <div class="state-panel error" role="alert">
+      <p>{{ loadError }}</p>
+      <button mat-stroked-button type="button" (click)="loadBookings()">Try again</button>
+    </div>
+  } @else if (bookings.length === 0) {
+    <div class="state-panel">
+      <mat-icon aria-hidden="true">event_available</mat-icon>
+      <p>You have not booked any classes yet.</p>
+      <a mat-stroked-button routerLink="/home">Browse sessions</a>
+    </div>
+  } @else {
+    <ul class="booking-list">
+      @for (booking of bookings; track booking.id) {
+        <li>
+          <mat-card appearance="outlined" class="booking-card" [class.is-cancelled]="!canCancel(booking)">
+            <div class="card-top">
+              <div>
+                <p class="when">{{ whenLabels(booking) }}</p>
+                <h2 class="class-name">{{ booking.className }}</h2>
+                <p class="trainer">{{ booking.trainerName }}</p>
+              </div>
+              <span class="status-chip" [class.chip-cancelled]="!canCancel(booking)">
+                {{ booking.bookingStatus }}
+              </span>
+            </div>
+            <p class="attendance">Attendance: {{ booking.attendanceStatus }}</p>
+            @if (canCancel(booking)) {
+              <button
+                mat-stroked-button
+                type="button"
+                class="cancel-btn"
+                (click)="cancelBooking(booking)"
+                [disabled]="cancellingBookingId === booking.id"
+                [attr.aria-busy]="cancellingBookingId === booking.id"
+              >
+                @if (cancellingBookingId === booking.id) {
+                  <mat-spinner diameter="18"></mat-spinner>
+                }
+                Cancel booking
+              </button>
+            }
+          </mat-card>
+        </li>
+      }
+    </ul>
+    <mat-paginator
+      [length]="total"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+    ></mat-paginator>
+  }
+</div>

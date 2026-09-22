@@ -1,0 +1,79 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Trainer</p>
+      <h1>My sessions</h1>
+      <p class="page-subtitle">Mark attendance for sessions you teach.</p>
+    </div>
+    <a mat-stroked-button routerLink="/trainer">Overview</a>
+  </header>
+
+  <mat-card class="form-panel filter-bar-card" appearance="outlined">
+    <div class="filter-bar-scroll">
+    <form class="filter-bar" [formGroup]="dateRangeForm" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field">
+        <mat-label>From</mat-label>
+        <input matInput [matDatepicker]="trainerFromPicker" formControlName="fromDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="trainerFromPicker"></mat-datepicker-toggle>
+        <mat-datepicker #trainerFromPicker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field">
+        <mat-label>To</mat-label>
+        <input matInput [matDatepicker]="trainerToPicker" formControlName="toDate" />
+        <mat-datepicker-toggle matIconSuffix [for]="trainerToPicker"></mat-datepicker-toggle>
+        <mat-datepicker #trainerToPicker></mat-datepicker>
+      </mat-form-field>
+      <button mat-flat-button color="primary" type="submit" class="filter-apply">Apply</button>
+    </form>
+    </div>
+  </mat-card>
+
+  @if (isLoading) {
+    <div class="state-panel" role="status">
+      <mat-spinner diameter="28"></mat-spinner>
+      <p>Loading sessions…</p>
+    </div>
+  } @else if (loadError) {
+    <div class="state-panel error" role="alert">
+      <p>{{ loadError }}</p>
+      <button mat-stroked-button type="button" (click)="loadSessions()">Retry</button>
+    </div>
+  } @else if (sessions.length === 0) {
+    <div class="state-panel">
+      <p>No sessions in the selected date range.</p>
+    </div>
+  } @else {
+    <mat-card class="table-panel" appearance="outlined">
+      <div class="table-wrap">
+      <table mat-table [dataSource]="sessions" class="sessions-table">
+        <ng-container matColumnDef="when">
+          <th mat-header-cell *matHeaderCellDef>When</th>
+          <td mat-cell *matCellDef="let row">{{ whenLabels(row) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="className">
+          <th mat-header-cell *matHeaderCellDef>Class</th>
+          <td mat-cell *matCellDef="let row">{{ row.className }}</td>
+        </ng-container>
+        <ng-container matColumnDef="seats">
+          <th mat-header-cell *matHeaderCellDef>Seats</th>
+          <td mat-cell *matCellDef="let row">{{ row.seatsTaken }} / {{ row.capacity }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">{{ row.statusName }}</td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let row">
+            <a mat-flat-button color="primary" [routerLink]="['/trainer/sessions', row.id, 'roster']">
+              Roster
+            </a>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+      </div>
+    </mat-card>
+  }
+</div>

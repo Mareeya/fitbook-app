@@ -1,0 +1,280 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Admin</p>
+      <h1>Sessions</h1>
+      <p class="page-subtitle">Schedule classes and generate repeating sessions.</p>
+    </div>
+    <span class="count-chip">{{ total }} Sessions </span>
+  </header>
+
+  <div class="content">
+    <mat-card class="form-panel filter-bar-card" appearance="outlined">
+      <div class="filter-bar-scroll">
+      <form class="filter-bar" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+        <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field filter-field--class">
+          <mat-label>Class</mat-label>
+          <mat-select formControlName="classId">
+            <mat-option [value]="null">All classes</mat-option>
+            @for (gymClass of classes; track gymClass.id) {
+              <mat-option [value]="gymClass.id">{{ gymClass.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field">
+          <mat-label>From</mat-label>
+          <input matInput [matDatepicker]="filterFromPicker" formControlName="fromDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="filterFromPicker"></mat-datepicker-toggle>
+          <mat-datepicker #filterFromPicker></mat-datepicker>
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="fixed" class="filter-field">
+          <mat-label>To</mat-label>
+          <input matInput [matDatepicker]="filterToPicker" formControlName="toDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="filterToPicker"></mat-datepicker-toggle>
+          <mat-datepicker #filterToPicker></mat-datepicker>
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit" class="filter-apply">Apply</button>
+      </form>
+      </div>
+    </mat-card>
+
+    <mat-card class="form-panel" appearance="outlined">
+      <div class="list-header schedule-header">
+        <h2>{{ editingSessionId !== null ? 'Update session' : 'Schedule sessions' }}</h2>
+      </div>
+
+      @if (editingSessionId === null) {
+        <div class="schedule-mode-wrap">
+          <span class="schedule-mode-label" id="schedule-mode-label">Schedule type</span>
+          <mat-button-toggle-group
+            class="schedule-mode-segment"
+            [value]="addMode"
+            (change)="setAddMode($event.value)"
+            aria-labelledby="schedule-mode-label"
+            hideSingleSelectionIndicator
+          >
+            <mat-button-toggle value="single">
+              <span class="segment-inner">
+                <mat-icon aria-hidden="true">event</mat-icon>
+                <span class="segment-copy">
+                  <span class="segment-title">One session</span>
+                  <span class="segment-hint">Single date &amp; time</span>
+                </span>
+              </span>
+            </mat-button-toggle>
+            <mat-button-toggle value="series">
+              <span class="segment-inner">
+                <mat-icon aria-hidden="true">date_range</mat-icon>
+                <span class="segment-copy">
+                  <span class="segment-title">Series</span>
+                  <span class="segment-hint">Repeating schedule</span>
+                </span>
+              </span>
+            </mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+      }
+
+      @if (editingSessionId !== null || addMode === 'single') {
+        <form #sessionFormRef="ngForm" class="form-grid" [formGroup]="sessionForm" (ngSubmit)="saveSession()">
+          <mat-form-field appearance="outline">
+            <mat-label>Class</mat-label>
+            <mat-select formControlName="classId">
+              @for (gymClass of classes; track gymClass.id) {
+                <mat-option [value]="gymClass.id">{{ gymClass.name }}</mat-option>
+              }
+            </mat-select>
+            @if (sessionForm.controls.classId.touched && sessionForm.controls.classId.invalid) {
+              <mat-error>Choose a class.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="sessionDatePicker"
+              formControlName="startDate"
+              autocomplete="off"
+              placeholder="Pick a date"
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="sessionDatePicker"></mat-datepicker-toggle>
+            <mat-datepicker #sessionDatePicker></mat-datepicker>
+            @if (sessionForm.controls.startDate.touched && sessionForm.controls.startDate.invalid) {
+              <mat-error>Choose a date.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Time</mat-label>
+            <input matInput type="time" formControlName="startTime" />
+            @if (sessionForm.controls.startTime.touched && sessionForm.controls.startTime.invalid) {
+              <mat-error>Enter a time.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Capacity (optional)</mat-label>
+            <input matInput type="number" formControlName="capacity" placeholder="Uses class default" />
+            @if (sessionForm.controls.capacity.touched && sessionForm.controls.capacity.invalid) {
+              <mat-error>Capacity must be between 1 and 200.</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="form-actions" [class.form-actions--split]="editingSessionId !== null">
+            @if (editingSessionId !== null) {
+              <button mat-stroked-button type="button" (click)="cancelEdit()">Cancel edit</button>
+            }
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSaving" [attr.aria-busy]="isSaving">
+              @if (isSaving) {
+                <mat-spinner diameter="18"></mat-spinner>
+              }
+              {{ editingSessionId !== null ? 'Save changes' : 'Create session' }}
+            </button>
+          </div>
+        </form>
+      } @else {
+        <form #generateFormRef="ngForm" class="form-grid" [formGroup]="generateForm" (ngSubmit)="generateSessions()">
+          <mat-form-field appearance="outline">
+            <mat-label>Class</mat-label>
+            <mat-select formControlName="classId">
+              @for (gymClass of classes; track gymClass.id) {
+                <mat-option [value]="gymClass.id">{{ gymClass.name }}</mat-option>
+              }
+            </mat-select>
+            @if (generateForm.controls.classId.touched && generateForm.controls.classId.invalid) {
+              <mat-error>Choose a class.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>First session date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="generateStartPicker"
+              formControlName="startDate"
+              autocomplete="off"
+              placeholder="Pick a date"
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="generateStartPicker"></mat-datepicker-toggle>
+            <mat-datepicker #generateStartPicker></mat-datepicker>
+            @if (generateForm.controls.startDate.touched && generateForm.controls.startDate.invalid) {
+              <mat-error>Choose the first date.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Time</mat-label>
+            <input matInput type="time" formControlName="startTime" />
+            @if (generateForm.controls.startTime.touched && generateForm.controls.startTime.invalid) {
+              <mat-error>Enter a time.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Until date</mat-label>
+            <input
+              matInput
+              [matDatepicker]="generateUntilPicker"
+              formControlName="untilDate"
+              autocomplete="off"
+              placeholder="Pick a date"
+            />
+            <mat-datepicker-toggle matIconSuffix [for]="generateUntilPicker"></mat-datepicker-toggle>
+            <mat-datepicker #generateUntilPicker></mat-datepicker>
+            @if (generateForm.controls.untilDate.touched && generateForm.controls.untilDate.invalid) {
+              <mat-error>Choose an end date.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Repeat every (days)</mat-label>
+            <input matInput type="number" formControlName="repeatEveryDays" />
+            @if (generateForm.controls.repeatEveryDays.touched && generateForm.controls.repeatEveryDays.invalid) {
+              <mat-error>Enter 1–90 days.</mat-error>
+            }
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Capacity (optional)</mat-label>
+            <input matInput type="number" formControlName="capacity" />
+            @if (generateForm.controls.capacity.touched && generateForm.controls.capacity.invalid) {
+              <mat-error>Capacity must be between 1 and 200.</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="form-actions">
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSaving" [attr.aria-busy]="isSaving">
+              @if (isSaving) {
+                <mat-spinner diameter="18"></mat-spinner>
+              }
+              Generate series
+            </button>
+          </div>
+        </form>
+      }
+    </mat-card>
+
+    <mat-card class="table-panel" appearance="outlined">
+      <div class="list-header">
+        <h2>Upcoming sessions</h2>
+        <button mat-stroked-button type="button" (click)="loadSessions()" [disabled]="isLoading">Refresh</button>
+      </div>
+
+      @if (isLoading) {
+        <div class="state" role="status">
+          <mat-spinner diameter="32"></mat-spinner>
+          <p>Loading sessions…</p>
+        </div>
+      } @else if (loadError) {
+        <div class="state error" role="alert">
+          <p>{{ loadError }}</p>
+          <button mat-stroked-button type="button" (click)="loadSessions()">Retry</button>
+        </div>
+      } @else if (sessions.length === 0) {
+        <p class="state">No sessions in this range.</p>
+      } @else {
+        <div class="table-wrap">
+          <table mat-table [dataSource]="sessions" class="sessions-table">
+            <ng-container matColumnDef="when">
+              <th mat-header-cell *matHeaderCellDef>When</th>
+              <td mat-cell *matCellDef="let row">
+                {{ whenLabels(row).dateLabel }}
+                <span class="sub">{{ whenLabels(row).timeLabel }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="className">
+              <th mat-header-cell *matHeaderCellDef>Class</th>
+              <td mat-cell *matCellDef="let row">{{ row.className }}</td>
+            </ng-container>
+            <ng-container matColumnDef="trainerName">
+              <th mat-header-cell *matHeaderCellDef>Trainer</th>
+              <td mat-cell *matCellDef="let row">{{ row.trainerName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="seats">
+              <th mat-header-cell *matHeaderCellDef>Seats</th>
+              <td mat-cell *matCellDef="let row">{{ row.seatsTaken }} / {{ row.capacity }}</td>
+            </ng-container>
+            <ng-container matColumnDef="status">
+              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <td mat-cell *matCellDef="let row">
+                <span class="chip" [class.chip-off]="isCancelled(row)">{{ row.statusName }}</span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let row">
+                @if (!isCancelled(row)) {
+                  <button mat-button type="button" (click)="editSession(row)">Edit</button>
+                  <button mat-button type="button" color="warn" (click)="cancelSession(row)">Cancel</button>
+                }
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+        <mat-paginator
+          [length]="total"
+          [pageIndex]="pageIndex"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 25, 50]"
+          (page)="onPage($event)"
+          aria-label="Sessions pages"
+        ></mat-paginator>
+      }
+    </mat-card>
+  </div>
+</div>

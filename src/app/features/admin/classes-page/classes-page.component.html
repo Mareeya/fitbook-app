@@ -1,82 +1,156 @@
-<main class="page">
+<div class="page">
   <header class="page-header">
     <div>
+      <p class="eyebrow">Admin</p>
       <h1>Classes</h1>
-      <p>Add, update, and manage classes.</p>
+      <p class="page-subtitle">Add, update, and manage classes.</p>
     </div>
-    <div class="count">
-      <span>Total</span>
-      <strong>{{ classes.length }}</strong>
-    </div>
+    <span class="count-chip">{{ dataSource.data.length }} total</span>
   </header>
 
-  <div class="content">
-    <section class="card">
-      <h2>{{ editingClassId === null ? 'Add a class' : 'Update class' }}</h2>
+  <div class="content content-split">
+    <mat-card class="form-panel" appearance="outlined" aria-labelledby="class-form-title">
+      <h2 id="class-form-title">{{ editingClassId === null ? 'Add a class' : 'Update class' }}</h2>
 
-      <form [formGroup]="classForm" (ngSubmit)="saveClass()">
-        <label for="class-name">Name</label>
-        <input id="class-name" type="text" formControlName="name" />
-        @if (classForm.controls.name.touched && classForm.controls.name.hasError('required')) {
-          <small>Enter a class name.</small>
-        }
-        @if (classForm.controls.name.touched && classForm.controls.name.hasError('pattern')) {
-          <small>Use letters and numbers only. Spaces, apostrophes, and hyphens are allowed.</small>
-        }
-
-        <label for="class-category">Category</label>
-        <select id="class-category" formControlName="categoryId">
-          @for (category of categories; track category.id) {
-            <option [value]="category.id">{{ category.value }}</option>
+      <form class="form-grid" [formGroup]="classForm" (ngSubmit)="saveClass()">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput id="class-name" type="text" formControlName="name" />
+          @if (classForm.controls.name.touched && classForm.controls.name.hasError('required')) {
+            <mat-error>Enter a class name.</mat-error>
           }
-        </select>
-
-        <label for="class-trainer">Trainer</label>
-        <select id="class-trainer" formControlName="trainerId">
-          @for (trainer of trainers; track trainer.id) {
-            <option [value]="trainer.id">{{ trainer.name }}</option>
+          @if (classForm.controls.name.touched && classForm.controls.name.hasError('pattern')) {
+            <mat-error>Use letters and numbers only. Spaces, apostrophes, and hyphens are allowed.</mat-error>
           }
-        </select>
+        </mat-form-field>
 
-        <label for="class-capacity">Capacity</label>
-        <input id="class-capacity" type="number" formControlName="initCapacity" />
-        @if (classForm.controls.initCapacity.touched && classForm.controls.initCapacity.invalid) {
-          <small>Capacity must be between 1 and 200.</small>
-        }
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select id="class-category" formControlName="categoryId">
+            @for (category of categories; track category.id) {
+              <mat-option [value]="category.id">{{ category.value }}</mat-option>
+            }
+          </mat-select>
+          @if (classForm.controls.categoryId.touched && classForm.controls.categoryId.invalid) {
+            <mat-error>Choose a category.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Trainer</mat-label>
+          <mat-select id="class-trainer" formControlName="trainerId">
+            @for (trainer of trainers; track trainer.id) {
+              <mat-option [value]="trainer.id">{{ trainer.name }}</mat-option>
+            }
+          </mat-select>
+          @if (classForm.controls.trainerId.touched && classForm.controls.trainerId.invalid) {
+            <mat-error>Choose a trainer.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Capacity</mat-label>
+          <input matInput id="class-capacity" type="number" formControlName="initCapacity" />
+          @if (classForm.controls.initCapacity.touched && classForm.controls.initCapacity.invalid) {
+            <mat-error>Capacity must be between 1 and 200.</mat-error>
+          }
+        </mat-form-field>
 
         <div class="actions">
-          <button type="submit">
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="isSaving"
+            [attr.aria-busy]="isSaving"
+          >
+            @if (isSaving) {
+              <mat-spinner diameter="18"></mat-spinner>
+            }
             {{ editingClassId === null ? 'Add class' : 'Save changes' }}
           </button>
           @if (editingClassId !== null) {
-            <button class="secondary" type="button" (click)="cancelEdit()">Cancel</button>
+            <button mat-stroked-button type="button" (click)="cancelEdit()">Cancel</button>
           }
         </div>
       </form>
-    </section>
+    </mat-card>
 
-    <section class="card">
+    <mat-card class="table-panel" appearance="outlined" aria-labelledby="class-list-title">
       <div class="list-header">
-        <h2>Current classes</h2>
-        <button class="secondary" type="button" (click)="loadClasses()">Refresh</button>
+        <h2 id="class-list-title">Current classes</h2>
+        <button mat-stroked-button type="button" (click)="loadClasses()">
+          <mat-icon>refresh</mat-icon>
+          Refresh
+        </button>
       </div>
 
-      @if (classes.length === 0) {
-        <p>No classes yet.</p>
+      @if (isLoading) {
+        <div class="state" role="status">
+          <mat-spinner diameter="28"></mat-spinner>
+          <p>Loading classes...</p>
+        </div>
+      } @else if (loadError) {
+        <div class="state error" role="alert">
+          <p>{{ loadError }}</p>
+          <button mat-stroked-button type="button" (click)="loadClasses()">Retry</button>
+        </div>
+      } @else if (dataSource.data.length === 0) {
+        <p class="state">No classes yet. Add one using the form.</p>
       } @else {
-        @for (gymClass of classes; track gymClass.id) {
-          <div class="row">
-            <div>
-              <strong>{{ gymClass.name }}</strong>
-              <p>{{ gymClass.categoryName }} · {{ gymClass.trainerName }} · {{ gymClass.initCapacity }} seats</p>
-            </div>
-            <div class="actions">
-              <button class="secondary" type="button" (click)="editClass(gymClass)">Edit</button>
-              <button class="delete" type="button" (click)="deleteClass(gymClass)">Delete</button>
-            </div>
-          </div>
-        }
+        <div class="table-wrap">
+          <table mat-table [dataSource]="dataSource" class="fb-table">
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Name</th>
+              <td mat-cell *matCellDef="let gymClass">{{ gymClass.name }}</td>
+            </ng-container>
+            <ng-container matColumnDef="categoryName">
+              <th mat-header-cell *matHeaderCellDef>Category</th>
+              <td mat-cell *matCellDef="let gymClass">{{ gymClass.categoryName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="trainerName">
+              <th mat-header-cell *matHeaderCellDef>Trainer</th>
+              <td mat-cell *matCellDef="let gymClass">{{ gymClass.trainerName }}</td>
+            </ng-container>
+            <ng-container matColumnDef="initCapacity">
+              <th mat-header-cell *matHeaderCellDef>Capacity</th>
+              <td mat-cell *matCellDef="let gymClass">{{ gymClass.initCapacity }}</td>
+            </ng-container>
+            <ng-container matColumnDef="averageFillRate">
+              <th mat-header-cell *matHeaderCellDef>Fill</th>
+              <td mat-cell *matCellDef="let gymClass">{{ gymClass.averageFillRate }}%</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let gymClass">
+                <button
+                  class="action-edit"
+                  mat-icon-button
+                  type="button"
+                  matTooltip="Edit class"
+                  [attr.aria-label]="'Edit ' + gymClass.name"
+                  (click)="editClass(gymClass)"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button
+                  class="action-delete"
+                  mat-icon-button
+                  type="button"
+                  matTooltip="Delete class"
+                  [attr.aria-label]="'Delete ' + gymClass.name"
+                  (click)="deleteClass(gymClass)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+          </table>
+        </div>
+        <mat-paginator [pageSize]="8" [pageSizeOptions]="[8, 16, 32]" showFirstLastButtons></mat-paginator>
       }
-    </section>
+    </mat-card>
   </div>
-</main>
+</div>

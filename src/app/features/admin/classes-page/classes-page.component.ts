@@ -1,31 +1,69 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AfterViewInit, Component, DestroyRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, FormGroupDirective, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { apiErrorMessage } from '../../../shared/helpers/api-error';
+import { showAppSnack } from '../../../shared/helpers/app-snackbar';
+import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog/confirm-dialog.component';
+import { AppValidators } from '../../../shared/validators/app.validators';
+import { finalize } from 'rxjs';
+import { TrainerResponse } from '../trainers-page/models/trainer-response.model';
+import { TrainersService } from '../trainers-page/services/trainers.service';
 import { GymClassRequest } from './models/gym-class-request.model';
 import { GymClassResponse } from './models/gym-class-response.model';
 import { LookupResponse } from './models/lookup-response.model';
-import { TrainerResponse } from '../trainers-page/models/trainer-response.model';
-import { apiErrorMessage } from '../../../shared/helpers/api-error';
-import { AppValidators } from '../../../shared/validators/app.validators';
-import { TrainersService } from '../trainers-page/services/trainers.service';
-import { LookupsService } from './services/lookups.service';
 import { ClassesService } from './services/classes.service';
+import { LookupsService } from './services/lookups.service';
 
 @Component({
   selector: 'app-classes-page',
-  imports: [ReactiveFormsModule],
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+  ],
   templateUrl: './classes-page.component.html',
   styleUrl: './classes-page.component.scss',
 })
-export class ClassesPageComponent implements OnInit {
+export class ClassesPageComponent implements OnInit, AfterViewInit {
   private readonly classesService = inject(ClassesService);
   private readonly trainersService = inject(TrainersService);
   private readonly lookupsService = inject(LookupsService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly destroyRef = inject(DestroyRef);
 
-  classes: GymClassResponse[] = [];
+  displayedColumns = ['name', 'categoryName', 'trainerName', 'initCapacity', 'averageFillRate', 'actions'];
+  dataSource = new MatTableDataSource<GymClassResponse>([]);
   trainers: TrainerResponse[] = [];
   categories: LookupResponse[] = [];
   editingClassId: number | null = null;
+  isLoading = false;
+  isSaving = false;
+  loadError = '';
+
+  @ViewChild(MatPaginator) paginator?: MatPaginator;
+  @ViewChild(FormGroupDirective) formDirective?: FormGroupDirective;
 
   classForm = new FormGroup({
     name: new FormControl('', [Validators.required, Validators.maxLength(80), AppValidators.label]),
@@ -40,13 +78,26 @@ export class ClassesPageComponent implements OnInit {
     this.loadClasses();
   }
 
+  ngAfterViewInit(): void {
+    this.connectTable();
+  }
+
   loadClasses(): void {
-    this.classesService.getAll().subscribe({
+    this.isLoading = true;
+    this.loadError = '';
+
+    this.classesService.getAll().pipe(
+      finalize(() => {
+        this.isLoading = false;
+      }),
+    ).subscribe({
       next: (classes) => {
-        this.classes = classes;
+        this.dataSource.data = classes;
+        queueMicrotask(() => this.connectTable());
       },
-      error: () => {
-        alert('Cannot load classes.');
+      error: (error: HttpErrorResponse) => {
+        this.loadError = apiErrorMessage(error, 'Cannot load classes.');
+        showAppSnack(this.snackBar, this.loadError, 'error');
       },
     });
   }
@@ -57,8 +108,8 @@ export class ClassesPageComponent implements OnInit {
         this.categories = categories;
         this.classForm.patchValue({ categoryId: categories[0]?.id ?? 0 });
       },
-      error: () => {
-        alert('Cannot load categories.');
+      error: (error: HttpErrorResponse) => {
+        showAppSnack(this.snackBar, apiErrorMessage(error, 'Cannot load categories.'), 'error');
       },
     });
   }
@@ -69,8 +120,8 @@ export class ClassesPageComponent implements OnInit {
         this.trainers = trainers;
         this.classForm.patchValue({ trainerId: trainers[0]?.id ?? 0 });
       },
-      error: () => {
-        alert('Cannot load trainers.');
+      error: (error: HttpErrorResponse) => {
+        showAppSnack(this.snackBar, apiErrorMessage(error, 'Cannot load trainers.'), 'error');
       },
     });
   }
@@ -78,7 +129,6 @@ export class ClassesPageComponent implements OnInit {
   saveClass(): void {
     if (this.classForm.invalid) {
       this.classForm.markAllAsTouched();
-      alert('Please fill all fields.');
       return;
     }
 
@@ -91,31 +141,11 @@ export class ClassesPageComponent implements OnInit {
     };
 
     if (this.editingClassId !== null) {
-      this.classesService.update(this.editingClassId, request).subscribe({
-        next: (updatedClass) => {
-          this.classes = this.classes.map((item) =>
-            item.id === updatedClass.id ? updatedClass : item,
-          );
-          alert('Class updated successfully.');
-          this.resetForm();
-        },
-        error: (error: HttpErrorResponse) => {
-          alert(apiErrorMessage(error, 'Could not update this class.'));
-        },
-      });
+      this.updateClass(this.editingClassId, request);
       return;
     }
 
-    this.classesService.create(request).subscribe({
-      next: (gymClass) => {
-        this.classes = [...this.classes, gymClass];
-        alert('Class added successfully.');
-        this.resetForm();
-      },
-      error: (error: HttpErrorResponse) => {
-        alert(apiErrorMessage(error, 'Could not add this class.'));
-      },
-    });
+    this.createClass(request);
   }
 
   editClass(gymClass: GymClassResponse): void {
@@ -126,6 +156,8 @@ export class ClassesPageComponent implements OnInit {
       trainerId: gymClass.trainerId,
       initCapacity: gymClass.initCapacity,
     });
+    this.classForm.markAsPristine();
+    this.classForm.markAsUntouched();
   }
 
   cancelEdit(): void {
@@ -133,32 +165,91 @@ export class ClassesPageComponent implements OnInit {
   }
 
   deleteClass(gymClass: GymClassResponse): void {
-    const ok = confirm('Delete ' + gymClass.name + '?');
-    if (!ok) {
-      return;
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      maxWidth: 'calc(100vw - 32px)',
+      data: {
+        title: 'Delete class',
+        message: `Delete ${gymClass.name}? This cannot be undone.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+      },
+    });
 
-    this.classesService.delete(gymClass.id).subscribe({
-      next: () => {
-        this.classes = this.classes.filter((item) => item.id !== gymClass.id);
-        alert('Class deleted successfully.');
-        if (this.editingClassId === gymClass.id) {
-          this.resetForm();
-        }
+    dialogRef.afterClosed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((confirmed) => {
+      if (!confirmed) {
+        return;
+      }
+
+      this.classesService.delete(gymClass.id).subscribe({
+        next: () => {
+          this.dataSource.data = this.dataSource.data.filter((item) => item.id !== gymClass.id);
+          showAppSnack(this.snackBar, 'Class deleted successfully.');
+          if (this.editingClassId === gymClass.id) {
+            this.resetForm();
+          }
+        },
+        error: (error: HttpErrorResponse) => {
+          showAppSnack(this.snackBar, apiErrorMessage(error, 'Could not delete this class.'), 'error');
+        },
+      });
+    });
+  }
+
+  private createClass(request: GymClassRequest): void {
+    this.isSaving = true;
+
+    this.classesService.create(request).pipe(
+      finalize(() => {
+        this.isSaving = false;
+      }),
+    ).subscribe({
+      next: (gymClass) => {
+        this.dataSource.data = [...this.dataSource.data, gymClass];
+        showAppSnack(this.snackBar, 'Class added successfully.');
+        this.resetForm();
       },
       error: (error: HttpErrorResponse) => {
-        alert(apiErrorMessage(error, 'Could not delete this class.'));
+        showAppSnack(this.snackBar, apiErrorMessage(error, 'Could not add this class.'), 'error');
+      },
+    });
+  }
+
+  private updateClass(id: number, request: GymClassRequest): void {
+    this.isSaving = true;
+
+    this.classesService.update(id, request).pipe(
+      finalize(() => {
+        this.isSaving = false;
+      }),
+    ).subscribe({
+      next: (updatedClass) => {
+        this.dataSource.data = this.dataSource.data.map((item) =>
+          item.id === updatedClass.id ? updatedClass : item,
+        );
+        showAppSnack(this.snackBar, 'Class updated successfully.');
+        this.resetForm();
+      },
+      error: (error: HttpErrorResponse) => {
+        showAppSnack(this.snackBar, apiErrorMessage(error, 'Could not update this class.'), 'error');
       },
     });
   }
 
   private resetForm(): void {
     this.editingClassId = null;
-    this.classForm.reset({
+    const blank = {
       name: '',
       categoryId: this.categories[0]?.id ?? 0,
       trainerId: this.trainers[0]?.id ?? 0,
       initCapacity: 10,
-    });
+    };
+    AppValidators.resetForm(this.classForm, blank, this.formDirective);
+  }
+
+  private connectTable(): void {
+    if (this.paginator) {
+      this.dataSource.paginator = this.paginator;
+    }
   }
 }

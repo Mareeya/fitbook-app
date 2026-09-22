@@ -1,0 +1,225 @@
+<div class="overview">
+  <header class="overview-header">
+    <div>
+      <p class="eyebrow">Admin</p>
+      <h1>Overview</h1>
+      <p class="subtitle">Last 7 days · today on the floor · class performance</p>
+    </div>
+  </header>
+
+  @if (isLoading) {
+    <div class="state-panel" role="status">
+      <mat-spinner diameter="32"></mat-spinner>
+      <p>Loading dashboard…</p>
+    </div>
+  } @else if (loadError) {
+    <div class="state-panel error" role="alert">
+      <p>{{ loadError }}</p>
+      <button mat-stroked-button type="button" (click)="loadDashboard()">Retry</button>
+    </div>
+  } @else {
+    @if (summary) {
+      <section class="kpi-grid" aria-label="Key metrics">
+        <article class="kpi-card kpi-green">
+          <div class="kpi-icon" aria-hidden="true"><mat-icon>pie_chart</mat-icon></div>
+          <p class="kpi-label">Utilization</p>
+          <p class="kpi-value">{{ summary.utilization }}%</p>
+          <p class="kpi-meta">Seats taken vs capacity offered</p>
+        </article>
+        <article class="kpi-card kpi-mint">
+          <div class="kpi-icon" aria-hidden="true"><mat-icon>how_to_reg</mat-icon></div>
+          <p class="kpi-label">Attendance rate</p>
+          <p class="kpi-value">{{ summary.attendanceRate }}%</p>
+          <p class="kpi-meta">{{ summary.attended }} attended · {{ summary.booked }} booked</p>
+        </article>
+        <article class="kpi-card kpi-sky">
+          <div class="kpi-icon" aria-hidden="true"><mat-icon>people</mat-icon></div>
+          <p class="kpi-label">Active members</p>
+          <p class="kpi-value">{{ summary.activeMembers }}</p>
+          <p class="kpi-meta">Attended in the last 28 days</p>
+        </article>
+        <article class="kpi-card kpi-sand">
+          <div class="kpi-icon" aria-hidden="true"><mat-icon>event</mat-icon></div>
+          <p class="kpi-label">Sessions held</p>
+          <p class="kpi-value">{{ summary.sessionsHeld }}</p>
+          <p class="kpi-meta">{{ summary.noShows }} no-shows ({{ summary.noShowRate }}%)</p>
+        </article>
+      </section>
+    }
+
+    <div class="dashboard-grid">
+      <mat-card class="panel today-panel" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Today on the floor</mat-card-title>
+          <mat-card-subtitle>{{ todaySessions.length }} sessions scheduled</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (todaySessions.length === 0) {
+            <p class="empty-copy">No sessions scheduled for today.</p>
+          } @else {
+            <ul class="session-list">
+              @for (session of todaySessions; track session.sessionId) {
+                <li class="session-row">
+                  <div class="session-main">
+                    <p class="session-title">{{ session.className }}</p>
+                    <p class="session-meta">
+                      {{ session.startAt | date: 'shortTime' }} · {{ session.trainerName }} ·
+                      {{ session.statusName }}
+                    </p>
+                    <div class="progress-wrap">
+                      <div class="progress-track">
+                        <div
+                          class="progress-fill"
+                          [class.is-warn]="session.isUnderFilled"
+                          [class.is-full]="session.isFull"
+                          [style.width.%]="session.fillRate"
+                        ></div>
+                      </div>
+                      <span class="progress-label">
+                        {{ session.seatsTaken }}/{{ session.capacity }} booked ·
+                        {{ session.checkedInCount }} checked in
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    class="status-badge"
+                    [class.badge-full]="session.isFull"
+                    [class.badge-low]="session.isUnderFilled"
+                  >
+                    @if (session.isFull) {
+                      Full
+                    } @else if (session.isUnderFilled) {
+                      Low fill
+                    } @else {
+                      {{ session.fillRate }}%
+                    }
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="panel chart-panel" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Capacity overview</mat-card-title>
+          <mat-card-subtitle>Average fill vs open seats</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="donut-wrap">
+            <svg class="donut" viewBox="0 0 42 42" role="img" [attr.aria-label]="'Utilization ' + occupancyPercent + ' percent'">
+              <g transform="rotate(-90 21 21)">
+                <circle class="track" cx="21" cy="21" r="15.9155" fill="none"></circle>
+                @for (slice of occupancySlices; track slice.label) {
+                  <circle
+                    cx="21"
+                    cy="21"
+                    r="15.9155"
+                    fill="none"
+                    [attr.stroke]="slice.color"
+                    [attr.stroke-dasharray]="slice.dasharray"
+                    [attr.stroke-dashoffset]="-slice.offset"
+                  ></circle>
+                }
+              </g>
+            </svg>
+            <div class="donut-center">
+              <p class="donut-value">{{ occupancyPercent }}%</p>
+              <p class="donut-cap">Avg fill</p>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <section class="analytics-row" aria-label="Class analytics">
+      <mat-card class="panel" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Sessions by category</mat-card-title>
+          <mat-card-subtitle>This month</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (categorySlices.length === 0) {
+            <p class="empty-copy">No category data yet.</p>
+          } @else {
+            <div class="legend">
+              @for (slice of categorySlices; track slice.label) {
+                <div class="legend-row">
+                  <span class="key" [style.background]="slice.color"></span>
+                  <span class="nm">{{ slice.label }}</span>
+                  <span class="v">{{ slice.value }}</span>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="panel" appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>Sessions by class</mat-card-title>
+          <mat-card-subtitle>Volume this month</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          @if (sessionBars.length === 0) {
+            <p class="empty-copy">No classes yet.</p>
+          } @else {
+            <div class="colchart">
+              @for (bar of sessionBars; track bar.label) {
+                <div class="col">
+                  <div class="col-stack">
+                    <div
+                      class="col-fill"
+                      [class.is-peak]="bar.tone === 'peak'"
+                      [class.is-warn]="bar.tone === 'warn'"
+                      [style.height.%]="bar.heightPct"
+                    ></div>
+                  </div>
+                  <p class="col-val">{{ bar.value }}</p>
+                  <p class="col-lab">{{ bar.label }}</p>
+                </div>
+              }
+            </div>
+          }
+        </mat-card-content>
+      </mat-card>
+    </section>
+
+    <mat-card class="panel occupancy-panel" appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Occupancy by class</mat-card-title>
+        <mat-card-subtitle>Average fill this month</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (classes.length === 0) {
+          <p class="empty-copy">No classes yet. Add a class to see occupancy.</p>
+        } @else {
+          <ul class="class-list">
+            @for (gymClass of classes; track gymClass.id) {
+              <li class="class-row">
+                <div>
+                  <p class="class-name">{{ gymClass.name }}</p>
+                  <p class="class-meta">
+                    {{ gymClass.categoryName }} · {{ gymClass.trainerName }} ·
+                    {{ gymClass.sessionsThisMonth }} sessions
+                  </p>
+                </div>
+                <div class="progress-wrap wide">
+                  <div class="progress-track">
+                    <div
+                      class="progress-fill"
+                      [class.is-warn]="gymClass.averageFillRate >= 80"
+                      [style.width.%]="gymClass.averageFillRate"
+                    ></div>
+                  </div>
+                  <span class="progress-label">{{ gymClass.averageFillRate }}% · {{ gymClass.initCapacity }} seats</span>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

@@ -1,0 +1,387 @@
+/* Shared layouts — use class names in HTML; avoid copying these rules into components. */
+
+/* —— Overview / KPI (admin dashboard + trainer overview) —— */
+.overview {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-3);
+  min-width: 0;
+}
+
+.overview-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+
+  > :first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  > a,
+  > button {
+    flex: 0 0 auto;
+    margin-left: auto;
+    align-self: center;
+  }
+
+  @media (max-width: 767px) {
+    > :first-child {
+      flex: 1 1 100%;
+    }
+
+    > a,
+    > button {
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+}
+
+.overview-header h1 {
+  margin: 0 0 6px;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.kpi-card {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border-subtle);
+}
+
+.kpi-green { background: var(--kpi-green); }
+.kpi-mint { background: var(--kpi-mint); }
+.kpi-sky { background: var(--kpi-sky); }
+.kpi-sand { background: var(--kpi-sand); }
+
+.kpi-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--primary);
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-soft);
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+}
+
+.kpi-label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.kpi-value {
+  margin: 8px 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.kpi-meta {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.panel { min-width: 0; }
+
+.today-panel mat-card-content,
+.classes-panel mat-card-content {
+  padding-top: 0;
+}
+
+.session-list,
+.class-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.session-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  align-items: start;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.session-title,
+.class-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.session-meta,
+.class-meta {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.progress-wrap {
+  margin-top: 10px;
+
+  &.wide {
+    min-width: 0;
+  }
+}
+
+.progress-track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  transition: width 0.2s ease;
+
+  &.is-warn { background: var(--warning); }
+  &.is-full { background: var(--primary-dark); }
+}
+
+.progress-label {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.class-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.empty-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+@media (min-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .session-row {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+
+  .class-row {
+    grid-template-columns: 220px 1fr;
+    align-items: center;
+  }
+}
+
+/* —— Admin CRUD pages (trainers, classes, sessions) —— */
+.list-header,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+
+  > h2 {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+  }
+
+  > button,
+  > a {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  @media (max-width: 767px) {
+    > h2 {
+      flex: 1 1 100%;
+    }
+
+    > button,
+    > a {
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+}
+
+.page .content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.content-split {
+  @media (min-width: 768px) {
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-columns: 1fr;
+
+    .form-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
+
+.page mat-card.form-panel,
+.page mat-card.table-panel {
+  min-width: 0;
+  padding: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px 16px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.form-grid .actions,
+.form-actions {
+  grid-column: 1 / -1;
+}
+
+.fb-table,
+.sessions-table,
+.roster-table {
+  width: 100%;
+  min-width: 560px;
+}
+
+.page .state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) 0;
+  color: var(--muted);
+
+  p { margin: 0; }
+  &.error { color: var(--error); }
+}
+
+.actions button {
+  min-height: 40px;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+
+  @media (max-width: 767px) {
+    justify-content: flex-end;
+  }
+}
+
+.form-actions--split {
+  justify-content: space-between;
+
+  @media (max-width: 767px) {
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+
+  @media (max-width: 479px) {
+    flex-direction: column-reverse;
+    align-items: stretch;
+
+    button { width: 100%; }
+  }
+}
+
+.status-chip,
+.chip {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.chip-off {
+  background: color-mix(in srgb, var(--muted) 20%, transparent);
+}
+
+.sub {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+}

@@ -5,4 +5,6 @@ export interface LoginResponse {
   name: string;
   email: string;
   role: UserRole;
+  token: string;
+  trainerId?: number | null;
 }

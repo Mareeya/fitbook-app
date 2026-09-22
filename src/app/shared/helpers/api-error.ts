@@ -9,6 +9,19 @@ export function apiErrorMessage(error: HttpErrorResponse, fallback: string): str
     return error.error;
   }
 
+  const problemDetail = error.error?.detail;
+  if (typeof problemDetail === 'string' && problemDetail) {
+    return problemDetail;
+  }
+
+  if (error.status === 401) {
+    return 'Please log in again.';
+  }
+
+  if (error.status === 403) {
+    return 'You do not have permission to do that.';
+  }
+
   const fieldErrors = error.error?.errors;
   if (fieldErrors) {
     const first = Object.values(fieldErrors)[0];

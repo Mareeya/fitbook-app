@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
-import { MemberHomeComponent } from './member-home/member-home.component';
+import { BrowseSessionsComponent } from './browse-sessions/browse-sessions.component';
+import { MyBookingsComponent } from './my-bookings/my-bookings.component';
 
 export const memberRoutes: Routes = [
-  { path: '', component: MemberHomeComponent },
+  { path: '', component: BrowseSessionsComponent },
+  { path: 'bookings', component: MyBookingsComponent },
 ];
